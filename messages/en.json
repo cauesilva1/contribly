@@ -62,7 +62,7 @@
     "loginTitle": "Log in",
     "signupTitle": "Join",
     "loginHint": "GitHub or email and password.",
-    "signupHint": "Create an account with email and password, or GitHub.",
+    "signupHint": "Create an account with email and password (we’ll email a confirmation link), or GitHub.",
     "continueGithub": "Continue with GitHub",
     "name": "Name",
     "namePlaceholder": "Your name",
@@ -79,7 +79,14 @@
     "passwordSignupPlaceholder": "At least 8 characters",
     "createAccount": "Create account",
     "signInEmail": "Sign in with email",
-    "genericError": "Something went wrong"
+    "genericError": "Something went wrong",
+    "verifyEyebrow": "Confirm email",
+    "verifyTitle": "Confirming your email…",
+    "verifyHint": "Hold on while we verify the link and sign you in.",
+    "verifyPending": "Confirming…",
+    "verifyInvalid": "This confirmation link is missing or incomplete.",
+    "verifySentBanner": "If this email can be used, we sent a confirmation link. Check your inbox (and spam).",
+    "linkRequiredBanner": "This email already has a password account. Sign in with email and password. GitHub linking is not automatic."
   },
   "footer": {
     "tagline": "Open source matchmaking: discover projects, swipe, and align next steps with maintainers.",

@@ -35,6 +35,11 @@ export function AuthForm({
   const [mode, setMode] = useState<Mode>(initialMode);
   const [pending, startTransition] = useTransition();
 
+  const verifySent = searchParams.get("verify") === "sent";
+  const linkRequired =
+    searchParams.get("error") === "link-required" ||
+    searchParams.get("error") === "OAuthAccountNotLinked";
+
   function switchMode(next: Mode) {
     setMode(next);
     router.replace(next === "signup" ? "/auth?mode=signup" : "/auth");
@@ -92,6 +97,17 @@ export function AuthForm({
       <p className="mt-1 text-sm text-[#57606a]">
         {mode === "login" ? t("loginHint") : t("signupHint")}
       </p>
+
+      {verifySent ? (
+        <p className="mt-3 rounded-md border border-[#dafbe1] bg-[#dafbe1]/60 px-3 py-2 text-xs text-[#1a7f37]">
+          {t("verifySentBanner")}
+        </p>
+      ) : null}
+      {linkRequired ? (
+        <p className="mt-3 rounded-md border border-[#fff8c5] bg-[#fff8c5]/80 px-3 py-2 text-xs text-[#9a6700]">
+          {t("linkRequiredBanner")}
+        </p>
+      ) : null}
 
       <form action={githubAction} className="mt-3">
         <Button

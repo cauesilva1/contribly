@@ -19,6 +19,18 @@ Use esta lista quando for publicar / validar na Vercel.
 - [x] `AUTH_URL` — `https://contribly.vercel.app` (com https://)
 - [x] `GITHUB_TOKEN` — (recomendado) sync de issues/perfil
 - [x] `CRON_SECRET` — protege `/api/cron/sync-issues`
+- [ ] `TOKEN_ENCRYPTION_KEY` — `openssl rand -base64 32` (32 bytes; cifra tokens GitHub em repouso)
+- [ ] `RESEND_API_KEY` (+ `EMAIL_FROM`) — obrigatório em produção para signup por e-mail
+
+## Rotação de segredos (se `.env` / chaves vazaram)
+
+Faça **antes** de confiar no ambiente de novo:
+
+1. [ ] Supabase → regenerar senha do Postgres + `service_role` key; atualizar `DATABASE_URL` / `DIRECT_URL` / `SUPABASE_SERVICE_ROLE_KEY`
+2. [ ] GitHub OAuth App → regenerar Client Secret; **Revoke all user tokens**
+3. [ ] Novo `AUTH_SECRET` (`openssl rand -base64 32`) — invalida sessões
+4. [ ] Novo `TOKEN_ENCRYPTION_KEY` e redeploy (tokens antigos em plaintext são re-criptografados na leitura; após revoke, usuários reconectam o GitHub)
+5. [ ] Atualizar Vercel + `.env` local + redeploy
 
 ## Banco
 
@@ -35,10 +47,12 @@ Use esta lista quando for publicar / validar na Vercel.
 - [x] Nome demo “OpenMatch Maintainer” → “Contribly Maintainer”
 - [x] English-only UI live (`lang=en`, `/pt` → `/`) — smoke ago/2026
 - [ ] Set `ADMIN_EMAIL` or `ADMIN_GITHUB` on Vercel for `/metrics`
+- [ ] Signup e-mail → confirmação Resend → login
 
 ## Observações
 
 - Não commitar `.env`
+- **Auth:** toda Server Action / Route Handler autenticada deve chamar `requireUser()` / `auth()` / `requireApiUser()` — o middleware só checa presença de cookie (UX)
 - Build na Vercel pula ESLint/typecheck (CI cobre isso) para ficar mais rápido
 - Em caso de token GitHub expirado: sync tenta refresh; se falhar, usa API pública e/ou peça re-login
 - Homepage do repo no GitHub ainda pode apontar para URL antiga da Vercel — atualize para `https://contribly.vercel.app`

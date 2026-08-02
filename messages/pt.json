@@ -62,7 +62,7 @@
     "loginTitle": "Login",
     "signupTitle": "Juntar-se",
     "loginHint": "GitHub ou e-mail e senha.",
-    "signupHint": "Crie com e-mail e senha, ou GitHub.",
+    "signupHint": "Crie com e-mail e senha (enviamos link de confirmação) ou GitHub.",
     "continueGithub": "Continuar com GitHub",
     "name": "Nome",
     "namePlaceholder": "Seu nome",
@@ -79,7 +79,14 @@
     "passwordSignupPlaceholder": "Mínimo 8 caracteres",
     "createAccount": "Criar conta",
     "signInEmail": "Entrar com e-mail",
-    "genericError": "Não foi possível continuar"
+    "genericError": "Não foi possível continuar",
+    "verifyEyebrow": "Confirmar e-mail",
+    "verifyTitle": "Confirmando seu e-mail…",
+    "verifyHint": "Aguarde enquanto validamos o link e fazemos o login.",
+    "verifyPending": "Confirmando…",
+    "verifyInvalid": "Este link de confirmação está incompleto ou inválido.",
+    "verifySentBanner": "Se este e-mail puder ser usado, enviamos um link de confirmação. Confira a caixa de entrada (e o spam).",
+    "linkRequiredBanner": "Este e-mail já tem conta com senha. Entre com e-mail e senha. O GitHub não é vinculado automaticamente."
   },
   "footer": {
     "tagline": "Matchmaking open source: descubra projetos, dê swipe e combine o próximo passo com mantenedores.",

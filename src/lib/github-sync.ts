@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { analyzeGithubDeveloperProfile } from "@/lib/github-profile";
+import {
+  decryptToken,
+  encryptToken,
+  isEncryptedToken,
+} from "@/lib/token-crypto";
 
 type GithubTokenResponse = {
   access_token?: string;
@@ -10,12 +15,34 @@ type GithubTokenResponse = {
   error_description?: string;
 };
 
-async function refreshGithubAccessToken(accountId: string, refreshToken: string) {
+async function maybeReencryptAccountTokens(account: {
+  id: string;
+  access_token: string | null;
+  refresh_token: string | null;
+}) {
+  const data: { access_token?: string; refresh_token?: string } = {};
+  if (account.access_token && !isEncryptedToken(account.access_token)) {
+    const enc = encryptToken(account.access_token);
+    if (enc && enc !== account.access_token) data.access_token = enc;
+  }
+  if (account.refresh_token && !isEncryptedToken(account.refresh_token)) {
+    const enc = encryptToken(account.refresh_token);
+    if (enc && enc !== account.refresh_token) data.refresh_token = enc;
+  }
+  if (Object.keys(data).length > 0) {
+    await prisma.account.update({ where: { id: account.id }, data });
+  }
+}
+
+async function refreshGithubAccessToken(
+  accountId: string,
+  refreshTokenPlain: string
+) {
   const body = new URLSearchParams({
     client_id: process.env.AUTH_GITHUB_ID ?? "",
     client_secret: process.env.AUTH_GITHUB_SECRET ?? "",
     grant_type: "refresh_token",
-    refresh_token: refreshToken,
+    refresh_token: refreshTokenPlain,
   });
 
   const response = await fetch("https://github.com/login/oauth/access_token", {
@@ -46,8 +73,10 @@ async function refreshGithubAccessToken(accountId: string, refreshToken: string)
   await prisma.account.update({
     where: { id: accountId },
     data: {
-      access_token: data.access_token,
-      refresh_token: data.refresh_token ?? refreshToken,
+      access_token: encryptToken(data.access_token),
+      refresh_token: encryptToken(
+        data.refresh_token ?? refreshTokenPlain
+      ),
       expires_at: expiresAt ?? undefined,
       token_type: "bearer",
     },
@@ -69,24 +98,29 @@ export async function getGithubAccessTokenForUser(userId: string) {
 
   if (!account) return null;
 
+  await maybeReencryptAccountTokens(account);
+
+  const accessPlain = decryptToken(account.access_token);
+  const refreshPlain = decryptToken(account.refresh_token);
+
   const now = Math.floor(Date.now() / 1000);
   const expired =
     typeof account.expires_at === "number" && account.expires_at <= now + 60;
 
-  if (account.access_token && !expired) {
-    return account.access_token;
+  if (accessPlain && !expired) {
+    return accessPlain;
   }
 
-  if (account.refresh_token) {
+  if (refreshPlain) {
     try {
-      return await refreshGithubAccessToken(account.id, account.refresh_token);
+      return await refreshGithubAccessToken(account.id, refreshPlain);
     } catch (error) {
       console.error("GitHub token refresh failed:", error);
-      return account.access_token;
+      return accessPlain;
     }
   }
 
-  return account.access_token;
+  return accessPlain;
 }
 
 async function tokenLooksValid(accessToken: string) {
@@ -109,7 +143,13 @@ export async function applyGithubProfileInsights(
     mode: "fill-empty" | "overwrite";
   }
 ) {
-  let accessToken = options.accessToken ?? (await getGithubAccessTokenForUser(userId));
+  let accessToken =
+    options.accessToken ?? (await getGithubAccessTokenForUser(userId));
+
+  // Event may pass still-encrypted value if re-read from DB — normalize
+  if (accessToken && isEncryptedToken(accessToken)) {
+    accessToken = decryptToken(accessToken);
+  }
 
   if (accessToken) {
     const valid = await tokenLooksValid(accessToken);
@@ -120,10 +160,15 @@ export async function applyGithubProfileInsights(
       });
       if (account?.refresh_token) {
         try {
-          accessToken = await refreshGithubAccessToken(
-            account.id,
-            account.refresh_token
-          );
+          const refreshPlain = decryptToken(account.refresh_token);
+          if (!refreshPlain) {
+            accessToken = null;
+          } else {
+            accessToken = await refreshGithubAccessToken(
+              account.id,
+              refreshPlain
+            );
+          }
         } catch {
           accessToken = null;
         }

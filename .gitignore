@@ -51,3 +51,7 @@ next-env.d.ts
 .windsurf/
 skills-lock.json
 scripts/
+
+# AppSec / audit reports (local only — do not publish)
+AUDIT*.md
+AUDIT-*.md

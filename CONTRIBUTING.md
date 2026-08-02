@@ -16,6 +16,7 @@ Thanks for helping improve Contribly.
 - Keep the contributor-first MVP loop working: discover → swipe → accept → GitHub
 - Do not commit secrets (`.env`, tokens, keys)
 - Match existing TypeScript / App Router patterns
+- Auth: every protected Server Action or `app/api` Route Handler must call `requireUser()` / `auth()` / `requireApiUser()` — middleware cookie check is UX only
 
 ## Project direction
 

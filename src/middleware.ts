@@ -16,6 +16,11 @@ const protectedPrefixes = [
   "/metrics",
 ];
 
+/**
+ * UX-only gate: checks that a session *cookie exists*, not that the Session row
+ * is valid. Real authorization MUST happen in Server Actions / Route Handlers
+ * via requireUser() / auth() / requireApiUser(). Never rely on this alone.
+ */
 function hasSessionCookie(req: NextRequest) {
   return Boolean(
     req.cookies.get("authjs.session-token")?.value ||

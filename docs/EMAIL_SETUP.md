@@ -1,6 +1,9 @@
 # Configurar e-mail (Resend) — Contribly
 
-O app envia e-mail ao mantenedor quando alguém demonstra **interesse**, usando a API do [Resend](https://resend.com).
+O app usa a API do [Resend](https://resend.com) para:
+
+1. Avisar o mantenedor quando alguém demonstra **interesse**
+2. Enviar o **link de confirmação** no signup por e-mail (ver também [AUTH_EMAIL.md](./AUTH_EMAIL.md))
 
 Variáveis:
 

@@ -1,47 +1,49 @@
 # Auth por e-mail / senha — Contribly
 
-Branch: `feature/email-password-auth`
-
 ## Estado atual
 
-Login e registro com **e-mail + senha** funcionam **sem envio de e-mail** e **sem Supabase Auth**.
+Login e registro com **e-mail + senha** exigem **confirmação de e-mail** (Resend) antes da sessão.
 
-- Senha guardada como `User.passwordHash` (bcrypt)
-- Sessão Auth.js (cookie + tabela `Session`), igual ao fluxo GitHub
-- Verificação por e-mail / templates SMTP: **adiado** (ver `docs/email-templates/` para o futuro)
+- Senha em `User.passwordHash` (bcrypt)
+- `User.emailVerified` preenchido após o magic link `/auth/verify`
+- Sessão Auth.js (cookie + tabela `Session`)
+- GitHub OAuth **não** usa `allowDangerousEmailAccountLinking` — evita account takeover por e-mail
+
+## Fluxo signup
+
+1. `signUpWithEmail` cria user + hash (sem sessão)
+2. Token em `VerificationToken` (SHA-256 do segredo; identificador `email-verify:…`)
+3. E-mail Resend com link `/auth/verify?email=&token=`
+4. Clique → `emailVerified` + sessão → onboarding
+
+Em **dev** sem `RESEND_API_KEY`, o link é logado no console do servidor.
 
 ## UI
 
-Uma página só: **`/auth`**
+`/auth` — Login | Join + GitHub  
+`/auth/verify` — consome o link de confirmação
 
-- Abas **Login** / **Juntar-se**
-- **Continuar com GitHub**
-- Ou e-mail + senha (campos sempre visíveis)
+Query banners:
 
-Header e home: botão **Juntar-se** → `/auth`
+- `?verify=sent` — “check your inbox”
+- `?error=link-required` — e-mail já tem senha; entre com e-mail/senha (sem auto-link GitHub)
 
-Rotas:
-- `/auth/login` → `/auth`
-- `/auth/signup` → `/auth?mode=signup`
+## Segurança relacionada
+
+- Rate limit in-memory em signup/signin/verify (`src/lib/auth-rate-limit.ts`)
+- Tokens OAuth GitHub criptografados em repouso (`TOKEN_ENCRYPTION_KEY`, `src/lib/token-crypto.ts`)
+
+## Env
+
+```bash
+RESEND_API_KEY=...
+EMAIL_FROM="Contribly <onboarding@resend.dev>"
+TOKEN_ENCRYPTION_KEY="$(openssl rand -base64 32)"  # exatamente 32 bytes
+```
 
 ## Schema
 
-- `User.passwordHash` — login e-mail
-- `User.role` — tipo de contribuição no signup
-- `User.supabaseUserId` — reservado para quando ligarmos verificação por e-mail
-
-## Migração
-
-```bash
-npx prisma migrate deploy
-# ou em dev:
-npx prisma migrate dev
-```
-
-## Futuro (e-mail de confirmação)
-
-Quando houver domínio + SMTP (ou Supabase custom SMTP):
-
-1. Ligar provider Email no Supabase (ou Auth.js email)
-2. Usar template em `docs/email-templates/confirm-signup.html`
-3. Só então exigir `emailVerified` antes de sessão plena
+- `User.passwordHash`
+- `User.emailVerified`
+- `User.role`
+- `User.supabaseUserId` — reservado / legado bridge
