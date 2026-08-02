@@ -2,19 +2,21 @@
 
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 export function AuthRequiredToast() {
+  const t = useTranslations("toasts");
   const searchParams = useSearchParams();
 
   useEffect(() => {
     if (searchParams.get("auth") === "required") {
-      toast.message("Faça login com GitHub para continuar.");
+      toast.message(t("authRequired"));
     }
     if (searchParams.get("deleted") === "1") {
-      toast.success("Conta excluída. Seus dados foram removidos.");
+      toast.success(t("accountDeleted"));
     }
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   return null;
 }

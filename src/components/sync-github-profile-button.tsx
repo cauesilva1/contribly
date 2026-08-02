@@ -1,11 +1,13 @@
 "use client";
 
 import { useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { syncProfileFromGithub } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 
 export function SyncGithubProfileButton() {
+  const t = useTranslations("syncGithub");
   const [pending, startTransition] = useTransition();
 
   return (
@@ -18,21 +20,22 @@ export function SyncGithubProfileButton() {
         startTransition(async () => {
           try {
             const insight = await syncProfileFromGithub();
-            const langs = insight.languages.join(", ") || "nenhuma";
+            const langs = insight.languages.join(", ") || t("noneLangs");
             toast.success(
-              `Perfil atualizado (${insight.stats.reposAnalyzed} repos). Linguagens: ${langs}`
+              t("syncSuccess", {
+                repos: insight.stats.reposAnalyzed,
+                langs,
+              })
             );
           } catch (error) {
             toast.error(
-              error instanceof Error
-                ? error.message
-                : "Falha ao sincronizar com o GitHub"
+              error instanceof Error ? error.message : t("syncError")
             );
           }
         });
       }}
     >
-      {pending ? "Analisando GitHub..." : "Sincronizar do GitHub"}
+      {pending ? t("syncing") : t("syncButton")}
     </Button>
   );
 }

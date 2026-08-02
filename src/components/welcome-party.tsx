@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { markWelcomeSeen } from "@/app/welcome-actions";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +13,7 @@ type WelcomePartyProps = {
 const PIECES = Array.from({ length: 48 }, (_, index) => index);
 
 export function WelcomeParty({ name }: WelcomePartyProps) {
+  const t = useTranslations("welcome");
   const [open, setOpen] = useState(true);
   const [pending, startTransition] = useTransition();
   const pieces = useMemo(
@@ -74,28 +76,27 @@ export function WelcomeParty({ name }: WelcomePartyProps) {
 
       <div className="welcome-party-card surface-card">
         <p className="text-xs uppercase tracking-[0.28em] text-[#0969da]">
-          Bem-vindo ao match
+          {t("eyebrow")}
         </p>
         <h2
           id="welcome-party-title"
           className="mt-3 font-display text-3xl leading-tight text-[#0d1117] sm:text-4xl"
         >
-          É festa, {name}!
+          {t("title", { name })}
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-[#57606a] sm:text-base">
-          Sua conta entrou no Contribly. Agora é hora de achar um repo que combine
-          com você — sem enrolação, com swipe e convite.
+          {t("description")}
         </p>
 
         <div className="mt-6 flex flex-wrap gap-2">
           <Button asChild variant="primary">
             <Link href="/for-you" onClick={dismiss}>
-              Ver recomendações
+              {t("seeRecommendations")}
             </Link>
           </Button>
           <Button asChild variant="outline">
             <Link href="/swipe" onClick={dismiss}>
-              Abrir swipe
+              {t("openSwipe")}
             </Link>
           </Button>
           <Button
@@ -104,7 +105,7 @@ export function WelcomeParty({ name }: WelcomePartyProps) {
             disabled={pending}
             onClick={dismiss}
           >
-            {pending ? "Entrando..." : "Fechar e explorar"}
+            {pending ? t("entering") : t("closeAndExplore")}
           </Button>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { updateProfile } from "@/app/actions";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export function ProfileForm({
   openToInvites,
   fromOnboarding = false,
 }: ProfileFormProps) {
+  const t = useTranslations("profileForm");
   const [dirty, setDirty] = useState(false);
   const [pending, startTransition] = useTransition();
 
@@ -40,7 +42,7 @@ export function ProfileForm({
 
   function onSubmit(formData: FormData) {
     if (!dirty && !fromOnboarding) {
-      toast.message("Nada novo para salvar.");
+      toast.message(t("nothingToSave"));
       return;
     }
 
@@ -48,7 +50,7 @@ export function ProfileForm({
       try {
         await updateProfile(formData);
         if (!fromOnboarding) {
-          toast.success("Perfil salvo.");
+          toast.success(t("profileSaved"));
           setDirty(false);
         }
       } catch (error) {
@@ -62,7 +64,7 @@ export function ProfileForm({
           return;
         }
         toast.error(
-          error instanceof Error ? error.message : "Não foi possível salvar o perfil"
+          error instanceof Error ? error.message : t("saveError")
         );
       }
     });
@@ -75,25 +77,28 @@ export function ProfileForm({
       ) : null}
 
       <div className="field">
-        <label htmlFor="email">E-mail {emailRequired ? "(obrigatório)" : ""}</label>
+        <label htmlFor="email">
+          {t("emailLabel")} {emailRequired ? t("required") : ""}
+        </label>
         <input
           id="email"
           name="email"
           type="email"
           required={emailRequired}
           defaultValue={email ?? ""}
-          placeholder="seu@email.com"
+          placeholder={t("emailPlaceholder")}
           onChange={markDirty}
         />
         <p className="mt-1 text-xs text-[#57606a]">
-          {email
-            ? "Vindo do GitHub quando disponível. Você pode atualizar."
-            : "O GitHub não enviou e-mail. Informe um para contato e avisos."}
+          {email ? t("emailHintFilled") : t("emailHintEmpty")}
         </p>
       </div>
 
       <div className="field">
-        <label htmlFor="bio">Bio{fromOnboarding ? " (opcional)" : ""}</label>
+        <label htmlFor="bio">
+          {t("bioLabel")}
+          {fromOnboarding ? ` ${t("optional")}` : ""}
+        </label>
         <textarea
           id="bio"
           name="bio"
@@ -101,8 +106,8 @@ export function ProfileForm({
           defaultValue={bio}
           placeholder={
             fromOnboarding
-              ? "Ex.: gosto de docs, bugs iniciantes e front-end"
-              : "O que você gosta de construir e como pode ajudar"
+              ? t("bioPlaceholderOnboarding")
+              : t("bioPlaceholderDefault")
           }
           onChange={markDirty}
         />
@@ -111,37 +116,37 @@ export function ProfileForm({
       <SkillAutocomplete
         id="languages"
         name="languages"
-        label="Linguagens / skills (obrigatório)"
+        label={t("languagesLabel")}
         required
         defaultValue={languages}
-        placeholder="Digite para buscar, ex.: Type…"
+        placeholder={t("languagesPlaceholder")}
         suggestions={LANGUAGE_SUGGESTIONS}
-        hint="Digite para ver sugestões. Enter ou vírgula adiciona."
+        hint={t("languagesHint")}
         onDirty={markDirty}
       />
 
       <SkillAutocomplete
         id="interestTags"
         name="interestTags"
-        label="Interesses / tags"
+        label={t("interestTagsLabel")}
         defaultValue={interestTags}
-        placeholder="Digite para buscar, ex.: docs…"
+        placeholder={t("interestTagsPlaceholder")}
         suggestions={INTEREST_TAG_SUGGESTIONS}
-        hint="Sugestões de tags comuns. Você também pode criar a sua."
+        hint={t("interestTagsHint")}
         onDirty={markDirty}
       />
 
       <div className="field">
-        <label htmlFor="experienceLevel">Experiência em open source</label>
+        <label htmlFor="experienceLevel">{t("experienceLevelLabel")}</label>
         <select
           id="experienceLevel"
           name="experienceLevel"
           defaultValue={experienceLevel}
           onChange={markDirty}
         >
-          <option value="beginner">Iniciante</option>
-          <option value="intermediate">Intermediário</option>
-          <option value="advanced">Avançado</option>
+          <option value="beginner">{t("levelBeginner")}</option>
+          <option value="intermediate">{t("levelIntermediate")}</option>
+          <option value="advanced">{t("levelAdvanced")}</option>
         </select>
       </div>
 
@@ -152,7 +157,7 @@ export function ProfileForm({
           defaultChecked={openToInvites}
           onChange={markDirty}
         />
-        Aberto a receber convites de mantenedores
+        {t("openToInvites")}
       </label>
 
       <Button
@@ -162,10 +167,10 @@ export function ProfileForm({
         className={fromOnboarding ? "w-full" : undefined}
       >
         {pending
-          ? "Salvando..."
+          ? t("saving")
           : fromOnboarding
-            ? "Continuar para recomendações"
-            : "Salvar perfil"}
+            ? t("continueToRecommendations")
+            : t("saveProfile")}
       </Button>
     </form>
   );

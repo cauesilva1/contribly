@@ -1,70 +1,47 @@
-# Auth por e-mail (Supabase) — Contribly
+# Auth por e-mail / senha — Contribly
 
 Branch: `feature/email-password-auth`
+
+## Estado atual
+
+Login e registro com **e-mail + senha** funcionam **sem envio de e-mail** e **sem Supabase Auth**.
+
+- Senha guardada como `User.passwordHash` (bcrypt)
+- Sessão Auth.js (cookie + tabela `Session`), igual ao fluxo GitHub
+- Verificação por e-mail / templates SMTP: **adiado** (ver `docs/email-templates/` para o futuro)
 
 ## UI
 
 Uma página só: **`/auth`**
 
-- Abas **Entrar** / **Criar conta**
+- Abas **Login** / **Juntar-se**
 - **Continuar com GitHub**
-- Ou e-mail + senha (com verificação)
+- Ou e-mail + senha (campos sempre visíveis)
 
-Header e home usam um único botão **Entrar** → `/auth` (sem poluir).
+Header e home: botão **Juntar-se** → `/auth`
 
-Rotas antigas:
+Rotas:
 - `/auth/login` → `/auth`
 - `/auth/signup` → `/auth?mode=signup`
-- `/auth/verify` — tela “cheque seu e-mail”
-- `/auth/callback` — após o link do e-mail
 
-## Ativar no Supabase (checklist)
+## Schema
 
-Projeto (pelo Postgres): `dyrfwycqpfpwjmhfznka`  
-URL: `https://dyrfwycqpfpwjmhfznka.supabase.co`
+- `User.passwordHash` — login e-mail
+- `User.role` — tipo de contribuição no signup
+- `User.supabaseUserId` — reservado para quando ligarmos verificação por e-mail
 
-1. Dashboard → **Authentication → Providers → Email**  
-   - Enabled: **ON**  
-   - Confirm email: **ON**
-2. **Authentication → URL Configuration**  
-   - Site URL: `http://localhost:3000` (dev) / `https://contribly.vercel.app` (prod)  
-   - Redirect URLs (adicione as duas):  
-     - `http://localhost:3000/auth/callback`  
-     - `https://contribly.vercel.app/auth/callback`
-3. **Authentication → Email Templates → Confirm signup**  
-   - Subject: `Confirm your Contribly account`  
-   - Body: cole o HTML de [`docs/email-templates/confirm-signup.html`](./email-templates/confirm-signup.html)  
-     (visual alinhado ao site: fundo `#eef3f8`, accent `#0969da`, botão escuro, tipografia serif no título)
-4. **Settings → API** → copie:  
-   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`  
-   - `anon` `public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-5. Local + Vercel: coloque as vars e reinicie / redeploy  
-6. Migration: `npx prisma migrate deploy` (role + `supabaseUserId`)
-
-Não dá para “ligar” Auth/e-mail só com a connection string do Postgres — precisa das keys **anon** no dashboard (ou Management API com access token pessoal).
-
-## Variáveis
+## Migração
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL="https://dyrfwycqpfpwjmhfznka.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
-# SUPABASE_SERVICE_ROLE_KEY=""  # opcional
+npx prisma migrate deploy
+# ou em dev:
+npx prisma migrate dev
 ```
 
-## Arquitetura
+## Futuro (e-mail de confirmação)
 
-```
-/auth  →  GitHub (Auth.js)  OU  e-mail/senha (Supabase Auth)
-                │                         │
-                └──────────┬──────────────┘
-                           ▼
-              sessão Auth.js (Prisma Session)
-                           ▼
-                    requireUser() / app
-```
+Quando houver domínio + SMTP (ou Supabase custom SMTP):
 
-Senha fica só no Supabase Auth. Prisma guarda `User.supabaseUserId` + `User.role`.
-
-## SMTP
-
-Free do Supabase: e-mails de auth pelo SMTP deles (limites baixos). Depois: SMTP custom / Resend no painel Auth.
+1. Ligar provider Email no Supabase (ou Auth.js email)
+2. Usar template em `docs/email-templates/confirm-signup.html`
+3. Só então exigir `emailVerified` antes de sessão plena

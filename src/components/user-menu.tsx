@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ChevronDown, DoorOpen } from "lucide-react";
 import { logout } from "@/app/auth-actions";
+import { useTranslations } from "next-intl";
 
 type UserMenuProps = {
   name: string;
@@ -12,6 +13,8 @@ type UserMenuProps = {
 };
 
 export function UserMenu({ name, image, githubUsername }: UserMenuProps) {
+  const t = useTranslations("common");
+  const tMenu = useTranslations("userMenu");
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -39,7 +42,7 @@ export function UserMenu({ name, image, githubUsername }: UserMenuProps) {
     });
   }
 
-  const displayName = name || githubUsername || "Conta";
+  const displayName = name || githubUsername || t("account");
   const subtitle = githubUsername ? `@${githubUsername}` : null;
 
   return (
@@ -103,7 +106,7 @@ export function UserMenu({ name, image, githubUsername }: UserMenuProps) {
                 className="flex cursor-pointer items-center px-3 py-2 text-sm text-[#0d1117] transition-colors hover:bg-[#f6f8fa]"
                 onClick={() => setOpen(false)}
               >
-                Perfil
+                {tMenu("profile")}
               </Link>
             </li>
             <li>
@@ -119,7 +122,7 @@ export function UserMenu({ name, image, githubUsername }: UserMenuProps) {
                 className="flex cursor-pointer items-center px-3 py-2 text-sm text-[#0d1117] transition-colors hover:bg-[#f6f8fa]"
                 onClick={() => setOpen(false)}
               >
-                Ver no GitHub
+                {tMenu("viewOnGithub")}
               </a>
             </li>
           </ul>
@@ -133,7 +136,7 @@ export function UserMenu({ name, image, githubUsername }: UserMenuProps) {
               className="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-[#cf222e] transition-colors hover:bg-[#ffebe9] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <DoorOpen className="h-4 w-4 shrink-0" strokeWidth={2} />
-              {pending ? "Saindo..." : "Sair da conta"}
+              {pending ? tMenu("signingOut") : tMenu("signOut")}
             </button>
           </div>
         </div>

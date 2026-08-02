@@ -47,8 +47,10 @@ model User {
   image         String?
   githubId      String?   @unique
   githubUsername String?
-  /// ID do usuário no Supabase Auth (login e-mail/senha).
+  /// ID do usuário no Supabase Auth (futuro: verificação por e-mail).
   supabaseUserId String?  @unique
+  /// Hash bcrypt para login e-mail/senha (sem verificação por e-mail por enquanto).
+  passwordHash  String?
   role          ContributorRole @default(developer)
   bio           String?
   languages     String[]  @default([])

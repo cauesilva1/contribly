@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -17,41 +18,37 @@ export function NotifyMaintainerPanel({
 }: {
   options: MaintainerNotifyOptions;
 }) {
+  const t = useTranslations("notifyMaintainer");
   const [copied, setCopied] = useState(false);
 
   async function copyInvite() {
     try {
       await navigator.clipboard.writeText(options.inviteUrl);
       setCopied(true);
-      toast.success("Link de convite copiado");
+      toast.success(t("copySuccess"));
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Não foi possível copiar");
+      toast.error(t("copyError"));
     }
   }
 
   return (
     <section className="surface-card mt-6 p-5">
       <p className="text-xs uppercase tracking-[0.2em] text-[#0969da]">
-        Avisar o mantenedor
+        {t("eyebrow")}
       </p>
       <h2 className="mt-2 font-display text-2xl text-[#0d1117]">
-        Duas formas de ele saber do seu interesse
+        {t("title")}
       </h2>
-      <p className="mt-2 text-sm text-[#57606a]">
-        Se a pessoa ainda não entra no Contribly, abra uma issue no GitHub ou
-        envie o link mágico. E-mail automático fica para quando houver domínio
-        verificado.
-      </p>
+      <p className="mt-2 text-sm text-[#57606a]">{t("description")}</p>
 
       <ol className="mt-5 space-y-4">
         <li className="rounded-lg border border-[#d0d7de] p-4">
           <p className="text-sm font-medium text-[#0d1117]">
-            1. Issue no GitHub
+            {t("step1Title")}
           </p>
           <p className="mt-1 text-sm text-[#57606a]">
-            Abre o formulário de nova issue já preenchido no repositório (você
-            revisa e publica).
+            {t("step1Description")}
           </p>
           {options.githubIssueUrl ? (
             <Button asChild variant="outline" size="sm" className="mt-3">
@@ -60,31 +57,30 @@ export function NotifyMaintainerPanel({
                 target="_blank"
                 rel="noreferrer"
               >
-                Abrir issue pré-preenchida
+                {t("openPrefilledIssue")}
               </a>
             </Button>
           ) : (
             <p className="mt-2 text-xs text-[#57606a]">
-              Link GitHub do projeto inválido.
+              {t("invalidGithubLink")}
             </p>
           )}
         </li>
 
         <li className="rounded-lg border border-[#d0d7de] p-4">
           <p className="text-sm font-medium text-[#0d1117]">
-            2. Link de convite
+            {t("step2Title")}
           </p>
           <p className="mt-1 text-sm text-[#57606a]">
-            Envie por Discord, e-mail ou DM. O mantenedor entra com GitHub e vê
-            o interesse.
+            {t("step2Description")}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button type="button" variant="primary" size="sm" onClick={copyInvite}>
-              {copied ? "Copiado" : "Copiar link"}
+              {copied ? t("copied") : t("copyLink")}
             </Button>
             <Button asChild variant="outline" size="sm">
               <a href={options.inviteUrl} target="_blank" rel="noreferrer">
-                Abrir convite
+                {t("openInvite")}
               </a>
             </Button>
           </div>

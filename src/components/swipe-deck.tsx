@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Heart, X } from "lucide-react";
 import { toast } from "sonner";
 import { expressInterest } from "@/app/actions";
@@ -27,6 +28,9 @@ type SwipeProject = {
 const SWIPE_THRESHOLD = 110;
 
 export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
+  const t = useTranslations("swipe");
+  const tCommon = useTranslations("common");
+  const tToast = useTranslations("toasts");
   const [index, setIndex] = useState(0);
   const [pending, startTransition] = useTransition();
   const [exit, setExit] = useState<"left" | "right" | null>(null);
@@ -39,9 +43,9 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
   if (!current) {
     return (
       <EmptyState
-        title="Deck vazio"
-        description="Você já viu os projetos disponíveis. Publique um repo ou volte depois para novos matches."
-        actionLabel="Publicar projeto"
+        title={t("deckEmptyTitle")}
+        description={t("deckEmptyDescription")}
+        actionLabel={tCommon("publishProject")}
         actionHref="/projects/new"
       />
     );
@@ -64,10 +68,10 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
         setExit(null);
         setIndex((value) => value + 1);
         if (interested && result && "notify" in result && result.notify) {
-          toast.success("Interesse enviado", {
-            description: "Abra o projeto para e-mail, issue no GitHub ou link de convite.",
+          toast.success(tToast("interestSentTitle"), {
+            description: tToast("interestSentDescription"),
             action: {
-              label: "Avisar",
+              label: tToast("interestSentAction"),
               onClick: () => {
                 window.location.href = `/projects/${projectId}?notify=1`;
               },
@@ -75,13 +79,15 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
           });
         } else {
           toast.success(
-            interested ? "Interesse enviado ao mantenedor" : "Projeto pulado"
+            interested
+              ? tToast("interestSentToMaintainer")
+              : tToast("projectSkipped")
           );
         }
       } catch (error) {
         setExit(null);
         toast.error(
-          error instanceof Error ? error.message : "Não foi possível registrar"
+          error instanceof Error ? error.message : tToast("swipeError")
         );
       }
     });
@@ -115,16 +121,19 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
   const rotation = dragX / 28;
   const likeOpacity = Math.min(1, Math.max(0, dragX / SWIPE_THRESHOLD));
   const passOpacity = Math.min(1, Math.max(0, -dragX / SWIPE_THRESHOLD));
+  const maintainerName = current.owner.githubUsername
+    ? `@${current.owner.githubUsername}`
+    : current.owner.name ?? t("anonymous");
 
   return (
     <div className="mx-auto w-full max-w-3xl">
       <p className="mb-3 text-center text-xs text-[#57606a]">
-        Arraste o card ou use os botões · direita = interesse · esquerda = passar
+        {t("dragHint")}
       </p>
       <div className="flex items-center gap-2 sm:gap-4 md:gap-5">
         <button
           type="button"
-          aria-label="Passar"
+          aria-label={t("passAria")}
           disabled={busy}
           onClick={() => decide(false)}
           className="flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-[#ffc1c0] bg-white text-[#cf222e] shadow-[0_10px_24px_rgba(207,34,46,0.12)] transition hover:scale-105 hover:bg-[#ffebe9] disabled:cursor-not-allowed disabled:opacity-50 sm:h-16 sm:w-16"
@@ -174,7 +183,7 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
                 className="swipe-stamp swipe-stamp-like"
                 style={exit ? undefined : { opacity: likeOpacity }}
               >
-                MATCH
+                {t("matchStamp")}
               </span>
             ) : null}
             {exit === "left" || passOpacity > 0.15 ? (
@@ -182,7 +191,7 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
                 className="swipe-stamp swipe-stamp-nope"
                 style={exit ? undefined : { opacity: passOpacity }}
               >
-                PASS
+                {t("passStamp")}
               </span>
             ) : null}
 
@@ -192,7 +201,7 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
               </p>
               {typeof current.score === "number" ? (
                 <span className="rounded-md bg-[#dafbe1] px-2 py-1 text-xs font-semibold text-[#1a7f37]">
-                  match {current.score}
+                  {t("matchScore", { score: current.score })}
                 </span>
               ) : null}
             </div>
@@ -212,7 +221,7 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
               ) : null}
               {current._count?.issues ? (
                 <span className="rounded-md bg-[#f6f8fa] px-2 py-1 text-xs text-[#57606a]">
-                  {current._count.issues} issues
+                  {t("issuesCount", { count: current._count.issues })}
                 </span>
               ) : null}
               {current.languages.map((lang) => (
@@ -235,15 +244,12 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
 
             {current.lookingFor.length > 0 ? (
               <p className="mt-4 rounded-lg bg-[#f6f8fa] px-3 py-2 text-sm text-[#0d1117]">
-                Buscando: {current.lookingFor.join(", ")}
+                {t("lookingFor", { items: current.lookingFor.join(", ") })}
               </p>
             ) : null}
 
             <p className="mt-3 text-sm text-[#57606a]">
-              Mantenedor:{" "}
-              {current.owner.githubUsername
-                ? `@${current.owner.githubUsername}`
-                : current.owner.name ?? "Anônimo"}
+              {t("maintainer", { name: maintainerName })}
             </p>
 
             <Link
@@ -255,14 +261,14 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
                 }
               }}
             >
-              Ver detalhes
+              {t("viewDetails")}
             </Link>
           </article>
         </div>
 
         <button
           type="button"
-          aria-label="Tenho interesse"
+          aria-label={t("interestAria")}
           disabled={busy}
           onClick={() => decide(true)}
           className="flex h-14 w-14 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-[#a7f0ba] bg-white text-[#1a7f37] shadow-[0_10px_24px_rgba(26,127,55,0.14)] transition hover:scale-105 hover:bg-[#dafbe1] disabled:cursor-not-allowed disabled:opacity-50 sm:h-16 sm:w-16"

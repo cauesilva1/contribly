@@ -1,5 +1,8 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import createMiddleware from "next-intl/middleware";
+import { NextResponse, type NextRequest } from "next/server";
+import { routing } from "@/i18n/routing";
+
+const intlMiddleware = createMiddleware(routing);
 
 const protectedPrefixes = [
   "/discover",
@@ -22,38 +25,46 @@ function hasSessionCookie(req: NextRequest) {
   );
 }
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+function stripLocale(pathname: string) {
+  for (const locale of routing.locales) {
+    if (pathname === `/${locale}`) return "/";
+    if (pathname.startsWith(`/${locale}/`)) {
+      return pathname.slice(locale.length + 1) || "/";
+    }
+  }
+  return pathname;
+}
+
+function localeFromPath(pathname: string) {
+  for (const locale of routing.locales) {
+    if (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) {
+      return locale;
+    }
+  }
+  return routing.defaultLocale;
+}
+
+export default function middleware(req: NextRequest) {
+  const pathname = req.nextUrl.pathname;
+  const pathWithoutLocale = stripLocale(pathname);
   const isProtected = protectedPrefixes.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    (prefix) =>
+      pathWithoutLocale === prefix ||
+      pathWithoutLocale.startsWith(`${prefix}/`)
   );
 
   if (isProtected && !hasSessionCookie(req)) {
+    const locale = localeFromPath(pathname);
     const url = req.nextUrl.clone();
-    url.pathname = "/auth";
+    url.pathname =
+      locale === routing.defaultLocale ? "/auth" : `/${locale}/auth`;
     url.searchParams.set("auth", "required");
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  return intlMiddleware(req);
 }
 
 export const config = {
-  matcher: [
-    "/discover/:path*",
-    "/swipe",
-    "/swipe/:path*",
-    "/for-you",
-    "/for-you/:path*",
-    "/projects/new",
-    "/inbox",
-    "/inbox/:path*",
-    "/profile",
-    "/profile/:path*",
-    "/onboarding",
-    "/onboarding/:path*",
-    "/dashboard",
-    "/dashboard/:path*",
-    "/matches/:path*",
-  ],
+  matcher: ["/", "/(pt|en)/:path*", "/((?!api|_next|_vercel|.*\\..*).*)"],
 };
