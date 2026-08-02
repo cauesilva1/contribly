@@ -18,7 +18,7 @@
 
 ---
 
-![Home do Contribly](docs/images/home.png)
+![Home do Contribly](docs/images/home-full.png)
 
 **Contribly** é uma plataforma web para descobrir repositórios open source, demonstrar interesse (swipe), e combinar o próximo passo com mantenedores — aceite, convite e conversa na thread do match.
 
@@ -39,27 +39,25 @@ Contribuir em open source ainda é difícil: achar um first issue bom, saber se 
 
 ## Screenshots
 
-### Landing
+Capturas em desktop 1440×900 @2x (Chrome).
 
-Hero com login GitHub e proposta de valor.
+### Hero
 
-![Landing Contribly](docs/images/home.png)
+![Hero Contribly](docs/images/home.png)
 
-### Destaques na home
+### Página completa
 
-Cards de projetos recentes com linguagens e tags.
+![Home completa](docs/images/home-full.png)
+
+### Destaques
 
 ![Destaques](docs/images/highlights.png)
 
 ### Detalhe do projeto
 
-Stars, sync de issues e CTA para swipe.
-
 ![Detalhe do projeto](docs/images/project.png)
 
 ### Good first issues
-
-Issues abertas com labels *good first issue* / *help wanted*, link direto no GitHub.
 
 ![Good first issues](docs/images/issues.png)
 
