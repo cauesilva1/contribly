@@ -6,18 +6,18 @@ import { Button } from "@/components/ui/button";
 import { SyncGithubProfileButton } from "@/components/sync-github-profile-button";
 
 export default async function OnboardingPage() {
-  const user = await requireUser({ skipOnboarding: true });
+  const user = await requireUser(true);
 
   if (isProfileComplete(user)) {
     redirect("/for-you");
   }
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-10">
-      <p className="text-sm uppercase tracking-[0.2em] text-[#57606a]">
+    <div className="mx-auto max-w-xl px-4 py-6">
+      <p className="text-xs uppercase tracking-[0.25em] text-[#0969da]">
         Passo 1 de 1
       </p>
-      <h1 className="mt-3 font-display text-4xl text-[#0d1117]">
+      <h1 className="mt-3 font-display text-3xl text-[#0d1117]">
         Monte seu perfil
       </h1>
       <p className="mt-2 text-[#57606a]">
@@ -25,12 +25,30 @@ export default async function OnboardingPage() {
         contrário, sincronize ou edite manualmente.
       </p>
 
-      <div className="mt-4">
+      <div className="mt-5">
         <SyncGithubProfileButton />
       </div>
 
-      <form action={updateProfile} className="mt-6 rounded-xl border border-[#d0d7de] bg-white p-6">
+      <form action={updateProfile} className="surface-card mt-4 p-5">
         <input type="hidden" name="fromOnboarding" value="1" />
+        <div className="field">
+          <label htmlFor="email">
+            E-mail {!user.email ? "(obrigatório)" : ""}
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required={!user.email}
+            defaultValue={user.email ?? ""}
+            placeholder="seu@email.com"
+          />
+          {!user.email ? (
+            <p className="mt-1 text-xs text-[#57606a]">
+              O GitHub não enviou e-mail. Informe um para contato.
+            </p>
+          ) : null}
+        </div>
         <div className="field">
           <label htmlFor="languages">Linguagens / skills (obrigatório)</label>
           <input
@@ -72,12 +90,11 @@ export default async function OnboardingPage() {
             placeholder="Ex.: gosto de docs, bugs iniciantes e front-end"
           />
         </div>
-        <label className="mb-6 flex items-center gap-2 text-sm text-[#0d1117]">
+        <label className="checkbox-row text-sm">
           <input
             type="checkbox"
             name="openToInvites"
             defaultChecked={user.openToInvites}
-            className="h-4 w-4 w-auto"
           />
           Estou aberto a receber convites
         </label>

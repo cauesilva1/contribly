@@ -15,11 +15,11 @@ export function EmptyState({
   actionHref,
 }: EmptyStateProps) {
   return (
-    <div className="rounded-2xl border border-dashed border-[#d0d7de] bg-white p-10 text-center">
+    <div className="rounded-xl border border-dashed border-[#d0d7de] bg-white/90 p-6 text-center">
       <h2 className="font-display text-2xl text-[#0d1117]">{title}</h2>
-      <p className="mx-auto mt-2 max-w-md text-[#57606a]">{description}</p>
+      <p className="mx-auto mt-1.5 max-w-md text-sm text-[#57606a]">{description}</p>
       {actionLabel && actionHref && (
-        <div className="mt-6">
+        <div className="mt-4">
           <Button asChild variant="primary">
             <Link href={actionHref}>{actionLabel}</Link>
           </Button>

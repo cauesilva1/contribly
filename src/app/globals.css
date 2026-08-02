@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f3f6f9;
+  --background: #eef3f8;
   --foreground: #0d1117;
   --surface: #ffffff;
   --muted: #57606a;
   --line: #d0d7de;
   --accent: #1f6feb;
   --accent-soft: #ddf4ff;
+  --ink: #0d1117;
 }
 
 @theme inline {
@@ -19,9 +20,9 @@
 
 body {
   background:
-    radial-gradient(circle at top left, rgba(31, 111, 235, 0.12), transparent 35%),
-    radial-gradient(circle at top right, rgba(9, 105, 218, 0.08), transparent 28%),
-    linear-gradient(180deg, #eef3f8 0%, #f7f9fc 45%, #f3f6f9 100%);
+    radial-gradient(circle at 12% 8%, rgba(31, 111, 235, 0.14), transparent 34%),
+    radial-gradient(circle at 88% 0%, rgba(9, 105, 218, 0.09), transparent 30%),
+    linear-gradient(180deg, #e8eef6 0%, #f4f7fb 42%, #eef3f8 100%);
   color: var(--foreground);
   font-family: var(--font-sans), "Source Sans 3", sans-serif;
   min-height: 100vh;
@@ -32,11 +33,35 @@ body {
 }
 
 a {
-  color: inherit;
   text-decoration: none;
+  cursor: pointer;
 }
 
-input,
+button,
+[type="button"],
+[type="submit"],
+[type="reset"],
+[role="button"],
+summary,
+label[for],
+select,
+summary {
+  cursor: pointer;
+}
+
+button:disabled,
+[type="button"]:disabled,
+[type="submit"]:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+a.buttonish,
+.interactive {
+  cursor: pointer;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
 textarea,
 select {
   width: 100%;
@@ -45,6 +70,32 @@ select {
   background: white;
   padding: 0.65rem 0.8rem;
   color: var(--foreground);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):hover,
+textarea:hover,
+select:hover {
+  border-color: #afb8c1;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.18);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  padding: 0;
+  border-radius: 0.25rem;
+  accent-color: #24292f;
+  flex-shrink: 0;
 }
 
 label {
@@ -54,6 +105,208 @@ label {
   color: var(--muted);
 }
 
+label.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
 .field {
-  margin-bottom: 1rem;
+  margin-bottom: 0.7rem;
+}
+
+.surface-card {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 40px rgba(13, 17, 23, 0.05);
+}
+
+a .surface-card,
+.surface-card-interactive {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+a:hover .surface-card,
+.surface-card-interactive:hover {
+  transform: translateY(-2px);
+  border-color: #b6c2cf;
+  box-shadow: 0 22px 48px rgba(13, 17, 23, 0.08);
+}
+
+@keyframes hero-code-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes hero-cursor-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.hero-code-panel {
+  animation: hero-code-in 0.7s ease-out both;
+}
+
+.hero-code-cursor {
+  display: inline-block;
+  width: 0.55ch;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: #e6edf3;
+  animation: hero-cursor-blink 1.05s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-code-panel {
+    animation: none;
+  }
+
+  .hero-code-cursor {
+    animation: none;
+    opacity: 1;
+  }
+
+  .swipe-exit-left,
+  .swipe-exit-right {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+@keyframes swipe-exit-left {
+  to {
+    opacity: 0;
+    transform: translateX(-120%) rotate(-18deg);
+  }
+}
+
+@keyframes swipe-exit-right {
+  to {
+    opacity: 0;
+    transform: translateX(120%) rotate(18deg);
+  }
+}
+
+.swipe-exit-left {
+  animation: swipe-exit-left 0.42s ease-in forwards;
+}
+
+.swipe-exit-right {
+  animation: swipe-exit-right 0.42s ease-in forwards;
+}
+
+.swipe-stamp {
+  position: absolute;
+  top: 1.25rem;
+  z-index: 2;
+  border: 3px solid;
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.7rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.swipe-stamp-like {
+  right: 1.25rem;
+  color: #1a7f37;
+  border-color: #1a7f37;
+  transform: rotate(12deg);
+}
+
+.swipe-stamp-nope {
+  left: 1.25rem;
+  color: #cf222e;
+  border-color: #cf222e;
+  transform: rotate(-12deg);
+}
+
+@keyframes welcome-party-fall {
+  0% {
+    transform: translate3d(0, -12vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 110vh, 0) rotate(540deg);
+    opacity: 0.15;
+  }
+}
+
+@keyframes welcome-party-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.welcome-party-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(13, 17, 23, 0.45);
+  backdrop-filter: blur(6px);
+}
+
+.welcome-party-confetti {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.welcome-party-piece {
+  position: absolute;
+  top: -8vh;
+  border-radius: 2px;
+  animation-name: welcome-party-fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.welcome-party-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 34rem);
+  padding: 1.5rem;
+  animation: welcome-party-pop 0.45s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-party-piece {
+    animation: none;
+    display: none;
+  }
+
+  .welcome-party-card {
+    animation: none;
+  }
 }

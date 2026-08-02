@@ -14,9 +14,14 @@ export default async function DashboardPage() {
 
   if (projects.length === 0) {
     return (
-      <div className="mx-auto max-w-4xl px-4 py-10">
-        <h1 className="font-display text-4xl text-[#0d1117]">Painel do mantenedor</h1>
-        <div className="mt-8">
+      <div className="mx-auto max-w-4xl px-4 py-6">
+        <p className="text-xs uppercase tracking-[0.25em] text-[#0969da]">
+          Mantenedor
+        </p>
+        <h1 className="mt-2 font-display text-3xl text-[#0d1117]">
+          Painel do mantenedor
+        </h1>
+        <div className="mt-4">
           <EmptyState
             title="Você ainda não publicou projetos"
             description="Publique ou importe um repositório para ver candidatos, interesses e analytics."
@@ -29,9 +34,14 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-10">
-      <div>
-        <h1 className="font-display text-4xl text-[#0d1117]">Painel do mantenedor</h1>
+    <div className="mx-auto max-w-6xl space-y-4 px-4 py-6">
+      <div className="border-b border-[#d0d7de] pb-3">
+        <p className="text-xs uppercase tracking-[0.25em] text-[#0969da]">
+          Mantenedor
+        </p>
+        <h1 className="mt-2 font-display text-3xl text-[#0d1117]">
+          Painel do mantenedor
+        </h1>
         <p className="mt-2 text-[#57606a]">
           Analytics, interesses pendentes e candidatos sugeridos pelo matchmaking.
         </p>
@@ -46,10 +56,7 @@ export default async function DashboardPage() {
           ["Issues abertas sync", stats.openIssues],
           ["Participantes ativos", stats.activeParticipants],
         ].map(([label, value]) => (
-          <div
-            key={label as string}
-            className="rounded-xl border border-[#d0d7de] bg-white p-4"
-          >
+          <div key={label as string} className="surface-card p-4">
             <p className="text-xs uppercase tracking-[0.15em] text-[#57606a]">
               {label}
             </p>
@@ -59,10 +66,7 @@ export default async function DashboardPage() {
       </section>
 
       {projects.map((project) => (
-        <section
-          key={project.id}
-          className="rounded-xl border border-[#d0d7de] bg-white p-6"
-        >
+        <section key={project.id} className="surface-card p-5">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="font-display text-2xl text-[#0d1117]">{project.title}</h2>
@@ -77,7 +81,7 @@ export default async function DashboardPage() {
             <div className="flex flex-wrap gap-2">
               <Link
                 href={`/projects/${project.id}`}
-                className="rounded-md border border-[#d0d7de] px-3 py-2 text-sm"
+                className="cursor-pointer rounded-md border border-[#d0d7de] px-3 py-2 text-sm transition hover:border-[#0969da] hover:text-[#0969da]"
               >
                 Abrir projeto
               </Link>
@@ -104,7 +108,7 @@ export default async function DashboardPage() {
                   {project.interests.map((interest) => (
                     <li
                       key={interest.id}
-                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[#d0d7de] p-3"
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[#d0d7de] bg-[#fbfcfd] p-3"
                     >
                       <div>
                         <p className="text-sm font-medium">
@@ -133,7 +137,7 @@ export default async function DashboardPage() {
                   {project.suggestedCandidates.map((candidate) => (
                     <li
                       key={candidate.id}
-                      className="rounded-lg border border-[#d0d7de] p-3"
+                      className="rounded-xl border border-[#d0d7de] bg-[#fbfcfd] p-3"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium">
@@ -149,7 +153,7 @@ export default async function DashboardPage() {
                       </p>
                       <Link
                         href={`/projects/${project.id}`}
-                        className="mt-2 inline-block text-xs text-[#0969da] hover:underline"
+                        className="mt-2 inline-block cursor-pointer text-xs text-[#0969da] hover:underline"
                       >
                         Convidar no projeto
                       </Link>

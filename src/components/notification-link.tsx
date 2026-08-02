@@ -28,7 +28,7 @@ export function NotificationLink({
         href={href}
         target="_blank"
         rel="noreferrer"
-        className="mt-2 inline-block text-sm text-[#0969da] hover:underline"
+        className="mt-2 inline-block cursor-pointer text-sm text-[#0969da] hover:underline"
         onClick={() => {
           void onClick();
         }}
@@ -41,7 +41,7 @@ export function NotificationLink({
   return (
     <Link
       href={href}
-      className="mt-2 inline-block text-sm text-[#0969da] hover:underline"
+      className="mt-2 inline-block cursor-pointer text-sm text-[#0969da] hover:underline"
       onClick={() => {
         void onClick();
       }}

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Fraunces, Source_Sans_3 } from "next/font/google";
 import { Toaster } from "sonner";
 import { SiteHeader } from "@/components/site-header";
+import { WelcomePartyGate } from "@/components/welcome-party-gate";
 import "./globals.css";
 
 const display = Fraunces({
@@ -50,6 +52,9 @@ export default function RootLayout({
           <SiteHeader />
           <main>{children}</main>
         </div>
+        <Suspense fallback={null}>
+          <WelcomePartyGate />
+        </Suspense>
         <Toaster richColors position="top-right" />
       </body>
     </html>

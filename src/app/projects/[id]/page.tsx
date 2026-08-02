@@ -50,13 +50,15 @@ export default async function ProjectDetailPage({
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10">
-      <article className="rounded-xl border border-[#d0d7de] bg-white p-6">
+    <div className="mx-auto max-w-4xl px-4 py-6">
+      <article className="surface-card p-5">
         <p className="text-xs uppercase tracking-[0.2em] text-[#57606a]">
           {project.source === "github_import" ? "Importado do GitHub" : "Cadastro manual"}
         </p>
-        <h1 className="mt-2 font-display text-4xl text-[#0d1117]">{project.title}</h1>
-        <p className="mt-4 text-[#57606a]">{project.description}</p>
+        <h1 className="mt-2 font-display text-3xl text-[#0d1117] md:text-5xl">
+          {project.title}
+        </h1>
+        <p className="mt-4 text-lg leading-relaxed text-[#57606a]">{project.description}</p>
 
         <div className="mt-5 flex flex-wrap gap-2">
           {project.languages.map((lang) => (
@@ -82,20 +84,20 @@ export default async function ProjectDetailPage({
             href={project.githubLink}
             target="_blank"
             rel="noreferrer"
-            className="rounded-md bg-[#24292f] px-4 py-2 text-sm text-white"
+            className="cursor-pointer rounded-md bg-[#24292f] px-4 py-2 text-sm text-white transition-colors hover:bg-[#1b1f23]"
           >
             Abrir no GitHub
           </a>
           <Link
             href="/swipe"
-            className="rounded-md border border-[#d0d7de] px-4 py-2 text-sm"
+            className="cursor-pointer rounded-md border border-[#d0d7de] px-4 py-2 text-sm transition-colors hover:bg-[#f6f8fa]"
           >
             Ir para swipe
           </Link>
           {isParticipant && (
             <Link
               href={`/matches/${project.id}`}
-              className="rounded-md border border-[#1f6feb] px-4 py-2 text-sm text-[#0969da]"
+              className="cursor-pointer rounded-md border border-[#1f6feb] px-4 py-2 text-sm text-[#0969da] transition-colors hover:bg-[#ddf4ff]"
             >
               Abrir thread do match
             </Link>
@@ -161,7 +163,7 @@ export default async function ProjectDetailPage({
       </section>
 
       {isOwner && (
-        <section className="mt-8 space-y-6">
+        <section className="mt-5 space-y-4">
           <div className="rounded-xl border border-[#d0d7de] bg-white p-6">
             <h2 className="font-display text-2xl">Interesses pendentes</h2>
             {pendingInterests.length === 0 ? (

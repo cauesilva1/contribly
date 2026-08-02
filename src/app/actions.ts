@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { ActionError, withActionError } from "@/lib/action-error";
 import { fetchGoodFirstIssues, fetchGithubRepoMeta } from "@/lib/github";
@@ -10,7 +10,7 @@ import {
 } from "@/lib/github-url";
 import { rankCandidatesForProject, scoreProjectForUser } from "@/lib/matching";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/lib/session";
+import { getSession, requireUser } from "@/lib/session";
 import {
   importGithubSchema,
   inviteSchema,
@@ -21,8 +21,9 @@ import {
 
 export async function updateProfile(formData: FormData) {
   return withActionError(async () => {
-    const user = await requireUser({ skipOnboarding: true });
+    const user = await requireUser(true);
     const parsed = profileSchema.parse({
+      email: formData.get("email"),
       bio: formData.get("bio"),
       languages: formData.get("languages"),
       interestTags: formData.get("interestTags"),
@@ -31,9 +32,28 @@ export async function updateProfile(formData: FormData) {
       fromOnboarding: formData.get("fromOnboarding") === "1",
     });
 
+    const email = typeof parsed.email === "string" ? parsed.email.trim() : null;
+    if (!user.email && !email) {
+      throw new ActionError("Informe um e-mail para contato.");
+    }
+
+    if (email && email !== user.email) {
+      const taken = await prisma.user.findFirst({
+        where: {
+          email,
+          NOT: { id: user.id },
+        },
+        select: { id: true },
+      });
+      if (taken) {
+        throw new ActionError("Esse e-mail já está em uso por outra conta.");
+      }
+    }
+
     await prisma.user.update({
       where: { id: user.id },
       data: {
+        ...(email ? { email } : {}),
         bio: parsed.bio,
         languages: parsed.languages,
         interestTags: parsed.interestTags,
@@ -56,7 +76,7 @@ export async function updateProfile(formData: FormData) {
 }
 
 export async function syncProfileFromGithub() {
-  const user = await requireUser({ skipOnboarding: true });
+  const user = await requireUser(true);
   const { getGithubAccessTokenForUser, applyGithubProfileInsights } =
     await import("@/lib/github-sync");
 
@@ -132,7 +152,10 @@ export async function listProjects(filters: ProjectFilters = {}) {
 }
 
 export async function getProject(id: string) {
-  return prisma.project.findUnique({
+  const session = await getSession();
+  const viewerId = session?.user?.id ?? null;
+
+  const project = await prisma.project.findUnique({
     where: { id },
     include: {
       owner: {
@@ -177,6 +200,20 @@ export async function getProject(id: string) {
       },
     },
   });
+
+  if (!project) return null;
+
+  // Não vaza lista de interessados para quem não é o dono
+  if (viewerId !== project.ownerId) {
+    return {
+      ...project,
+      interests: viewerId
+        ? project.interests.filter((interest) => interest.userId === viewerId)
+        : [],
+    };
+  }
+
+  return project;
 }
 
 export async function listRecommendedProjects() {
@@ -258,7 +295,13 @@ export async function createProject(formData: FormData) {
     });
 
     const githubLink = normalizeGithubRepoUrl(parsed.githubLink);
-    const existing = await findExistingProjectByGithub({ githubLink });
+    const githubRepoIdRaw = String(formData.get("githubRepoId") ?? "").trim();
+    const githubRepoId = githubRepoIdRaw || null;
+
+    const existing = await findExistingProjectByGithub({
+      githubLink,
+      githubRepoId,
+    });
     if (existing) {
       throw new ActionError(
         `Esse repositório já está cadastrado como "${existing.title}".`
@@ -270,10 +313,11 @@ export async function createProject(formData: FormData) {
         title: parsed.title,
         description: parsed.description,
         githubLink,
+        githubRepoId,
         languages: parsed.languages,
         tags: parsed.tags,
         lookingFor: parsed.lookingFor,
-        source: "manual",
+        source: githubRepoId ? "github_import" : "manual",
         ownerId: user.id,
       },
     });
@@ -283,6 +327,43 @@ export async function createProject(formData: FormData) {
     revalidatePath("/for-you");
     revalidatePath("/dashboard");
     return project.id;
+  });
+}
+
+export async function previewGithubRepo(githubUrl: string) {
+  return withActionError(async () => {
+    await requireUser();
+
+    if (!/github\.com\/[^/]+\/[^/]+/i.test(githubUrl.trim())) {
+      throw new ActionError("Cole um link de repositório GitHub válido.");
+    }
+
+    const meta = await fetchGithubRepoMeta(githubUrl);
+    if (!meta) {
+      throw new ActionError(
+        "Não foi possível ler esse repositório. Confira o link ou o limite da API."
+      );
+    }
+
+    const existing = await findExistingProjectByGithub({
+      githubLink: meta.githubLink,
+      githubRepoId: meta.githubRepoId,
+    });
+    if (existing) {
+      throw new ActionError(
+        `Esse repositório já está cadastrado como "${existing.title}".`
+      );
+    }
+
+    return {
+      githubRepoId: meta.githubRepoId,
+      githubLink: normalizeGithubRepoUrl(meta.githubLink),
+      title: meta.title,
+      description: meta.description,
+      languages: meta.languages.join(", "),
+      tags: meta.topics.join(", "),
+      starsCount: meta.starsCount,
+    };
   });
 }
 
@@ -718,68 +799,6 @@ export async function syncProjectIssues(projectId: string) {
   return issues.length;
 }
 
-export async function syncAllProjectIssues(limit = 20) {
-  const projects = await prisma.project.findMany({
-    orderBy: [{ issuesSyncedAt: "asc" }, { updatedAt: "asc" }],
-    take: limit,
-    select: { id: true, githubLink: true, ownerId: true, languages: true, tags: true, starsCount: true },
-  });
-
-  let synced = 0;
-  const errors: string[] = [];
-
-  for (const project of projects) {
-    try {
-      const [issues, meta] = await Promise.all([
-        fetchGoodFirstIssues(project.githubLink),
-        fetchGithubRepoMeta(project.githubLink),
-      ]);
-
-      await prisma.$transaction([
-        prisma.projectIssue.deleteMany({ where: { projectId: project.id } }),
-        ...issues.map((issue) =>
-          prisma.projectIssue.create({
-            data: {
-              projectId: project.id,
-              githubIssueId: String(issue.id),
-              number: issue.number,
-              title: issue.title,
-              url: issue.html_url,
-              labels: issue.labels.map((label) =>
-                typeof label === "string" ? label : label.name
-              ),
-            },
-          })
-        ),
-        prisma.project.update({
-          where: { id: project.id },
-          data: {
-            issuesSyncedAt: new Date(),
-            starsCount: meta?.starsCount ?? project.starsCount,
-            languages:
-              project.languages.length === 0 && meta?.language
-                ? [meta.language]
-                : project.languages,
-            tags:
-              project.tags.length === 0 && meta?.topics?.length
-                ? meta.topics
-                : project.tags,
-          },
-        }),
-      ]);
-      synced += 1;
-    } catch (error) {
-      errors.push(
-        `${project.id}: ${error instanceof Error ? error.message : "erro"}`
-      );
-    }
-  }
-
-  revalidatePath("/for-you");
-  revalidatePath("/dashboard");
-  return { synced, total: projects.length, errors };
-}
-
 export async function getMaintainerDashboard() {
   const user = await requireUser();
 
@@ -970,12 +989,14 @@ export async function markNotificationsRead() {
     data: { read: true },
   });
   revalidatePath("/inbox");
+  revalidateTag(`unread-${user.id}`);
 }
 
 export async function markNotificationsByHref(href: string) {
-  const user = await requireUser({ skipOnboarding: true });
+  const user = await requireUser(true);
   if (!href) return;
 
+  // Chamada durante o render de páginas — não usar revalidatePath aqui.
   await prisma.notification.updateMany({
     where: {
       userId: user.id,
@@ -987,17 +1008,16 @@ export async function markNotificationsByHref(href: string) {
     },
     data: { read: true },
   });
-
-  revalidatePath("/inbox");
 }
 
 export async function markNotificationRead(notificationId: string) {
-  const user = await requireUser({ skipOnboarding: true });
+  const user = await requireUser(true);
   await prisma.notification.updateMany({
     where: { id: notificationId, userId: user.id },
     data: { read: true },
   });
   revalidatePath("/inbox");
+  revalidateTag(`unread-${user.id}`);
 }
 
 export async function getInboxData() {
@@ -1015,8 +1035,18 @@ export async function getInboxData() {
           project: { ownerId: user.id },
         },
         include: {
-          user: true,
-          project: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+              githubUsername: true,
+              languages: true,
+            },
+          },
+          project: {
+            select: { id: true, title: true },
+          },
         },
         orderBy: { createdAt: "desc" },
       }),
@@ -1026,8 +1056,17 @@ export async function getInboxData() {
           status: "pending",
         },
         include: {
-          project: true,
-          fromUser: true,
+          project: {
+            select: { id: true, title: true },
+          },
+          fromUser: {
+            select: {
+              id: true,
+              name: true,
+              githubUsername: true,
+              image: true,
+            },
+          },
         },
         orderBy: { createdAt: "desc" },
       }),

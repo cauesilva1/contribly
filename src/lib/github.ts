@@ -69,16 +69,18 @@ export async function fetchGithubRepoMeta(githubLink: string) {
   const parsed = parseGithubRepo(githubLink);
   if (!parsed) return null;
 
+  const headers = {
+    Accept: "application/vnd.github+json",
+    "User-Agent": "openmatch",
+    ...(process.env.GITHUB_TOKEN
+      ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+      : {}),
+  };
+
   const response = await fetchGithubWithRetry(
     `https://api.github.com/repos/${parsed.owner}/${parsed.repo}`,
     {
-      headers: {
-        Accept: "application/vnd.github+json",
-        "User-Agent": "openmatch",
-        ...(process.env.GITHUB_TOKEN
-          ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
-          : {}),
-      },
+      headers,
       next: { revalidate: 0 },
     }
   );
@@ -86,16 +88,54 @@ export async function fetchGithubRepoMeta(githubLink: string) {
   if (!response.ok) return null;
 
   const data = (await response.json()) as {
+    id: number;
+    name?: string;
+    full_name?: string;
+    html_url?: string;
     stargazers_count?: number;
     language?: string | null;
     topics?: string[];
     description?: string | null;
   };
 
+  let languages: string[] = data.language ? [data.language] : [];
+  const languagesResponse = await fetchGithubWithRetry(
+    `https://api.github.com/repos/${parsed.owner}/${parsed.repo}/languages`,
+    {
+      headers,
+      next: { revalidate: 0 },
+    }
+  );
+
+  if (languagesResponse.ok) {
+    const languageMap = (await languagesResponse.json()) as Record<string, number>;
+    languages = Object.entries(languageMap)
+      .sort((a, b) => b[1] - a[1])
+      .map(([name]) => name)
+      .slice(0, 8);
+    if (languages.length === 0 && data.language) {
+      languages = [data.language];
+    }
+  }
+
   return {
+    githubRepoId: String(data.id),
+    title: data.full_name ?? `${parsed.owner}/${parsed.repo}`,
+    githubLink: normalizeGithubUrl(data.html_url, parsed),
     starsCount: data.stargazers_count ?? null,
     language: data.language ?? null,
+    languages,
     topics: data.topics ?? [],
-    description: data.description ?? null,
+    description:
+      data.description?.trim() ||
+      `Repositório ${data.full_name ?? `${parsed.owner}/${parsed.repo}`}`,
   };
+}
+
+function normalizeGithubUrl(
+  htmlUrl: string | undefined,
+  parsed: { owner: string; repo: string }
+) {
+  if (htmlUrl) return htmlUrl.replace(/\/$/, "");
+  return `https://github.com/${parsed.owner}/${parsed.repo}`;
 }

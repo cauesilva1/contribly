@@ -44,6 +44,7 @@ model User {
   interestTags  String[]  @default([])
   experienceLevel ExperienceLevel @default(beginner)
   openToInvites Boolean   @default(true)
+  welcomeSeenAt DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   lastLoginAt   DateTime?

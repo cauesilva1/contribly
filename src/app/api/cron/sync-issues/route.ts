@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { syncAllProjectIssues } from "@/app/actions";
+import { syncAllProjectIssues } from "@/lib/cron/sync-all-issues";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import { fetchGithubPrimaryEmail } from "@/lib/github-email";
 import { applyGithubProfileInsights } from "@/lib/github-sync";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -13,7 +14,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
-          // public repos + perfil são suficientes para analisar stack
           scope: "read:user user:email",
         },
       },
@@ -29,6 +29,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;
+        session.user.name = user.name;
+        session.user.email = user.email;
+        session.user.image = user.image;
+        session.user.githubUsername = user.githubUsername ?? null;
       }
       return session;
     },
@@ -39,9 +43,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         id?: number | string;
         login?: string;
         bio?: string | null;
+        email?: string | null;
       } | undefined;
 
       if (!user.id) return;
+
+      let email = user.email ?? githubProfile?.email ?? null;
+      if (!email) {
+        email = await fetchGithubPrimaryEmail(account?.access_token);
+      }
 
       await prisma.user.update({
         where: { id: user.id },
@@ -50,11 +60,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           githubUsername: githubProfile?.login,
           image: user.image ?? undefined,
           name: user.name ?? githubProfile?.login ?? undefined,
+          ...(email ? { email } : {}),
           lastLoginAt: new Date(),
         },
       });
 
-      // Preenche stack/interesses/experiência a partir dos repos (sem sobrescrever o que o user já editou)
       try {
         await applyGithubProfileInsights(user.id, {
           accessToken: account?.access_token,

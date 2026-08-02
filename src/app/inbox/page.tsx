@@ -6,14 +6,32 @@ import { Button } from "@/components/ui/button";
 import { InterestActions, InviteActions } from "@/components/inbox-actions";
 import { NotificationLink } from "@/components/notification-link";
 
+function InboxSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="surface-card p-4">
+      <h2 className="font-display text-xl text-[#0d1117]">{title}</h2>
+      <div className="mt-3">{children}</div>
+    </section>
+  );
+}
+
 export default async function InboxPage() {
   const data = await getInboxData();
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 px-4 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="mx-auto max-w-4xl space-y-4 px-4 py-6">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-[#d0d7de] pb-3">
         <div>
-          <h1 className="font-display text-4xl text-[#0d1117]">Inbox</h1>
+          <p className="text-xs uppercase tracking-[0.25em] text-[#0969da]">
+            Atividade
+          </p>
+          <h1 className="mt-2 font-display text-3xl text-[#0d1117]">Inbox</h1>
           <p className="mt-2 text-[#57606a]">
             Interesses, convites e notificações do seu matchmaking.
           </p>
@@ -25,23 +43,24 @@ export default async function InboxPage() {
         </form>
       </div>
 
-      <section className="rounded-xl border border-[#d0d7de] bg-white p-6">
-        <h2 className="font-display text-2xl">Interesses nos seus projetos</h2>
+      <InboxSection title="Interesses nos seus projetos">
         {data.interests.length === 0 ? (
-          <p className="mt-3 text-sm text-[#57606a]">
+          <p className="text-sm text-[#57606a]">
             Nada pendente. Quando alguém der swipe de interesse, aparece aqui.
           </p>
         ) : (
-          <ul className="mt-4 space-y-3">
+          <ul className="space-y-3">
             {data.interests.map((interest) => (
               <li
                 key={interest.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d0d7de] p-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#d0d7de] bg-[#fbfcfd] p-4"
               >
                 <div>
-                  <p className="font-medium">
-                    {interest.user.name ?? interest.user.githubUsername} →{" "}
-                    {interest.project.title}
+                  <p className="font-medium text-[#0d1117]">
+                    {interest.user.name ?? interest.user.githubUsername}
+                  </p>
+                  <p className="text-sm text-[#57606a]">
+                    quer contribuir em {interest.project.title}
                   </p>
                 </div>
                 <InterestActions interestId={interest.id} />
@@ -49,28 +68,27 @@ export default async function InboxPage() {
             ))}
           </ul>
         )}
-      </section>
+      </InboxSection>
 
-      <section className="rounded-xl border border-[#d0d7de] bg-white p-6">
-        <h2 className="font-display text-2xl">Convites recebidos</h2>
+      <InboxSection title="Convites recebidos">
         {data.invites.length === 0 ? (
-          <p className="mt-3 text-sm text-[#57606a]">
+          <p className="text-sm text-[#57606a]">
             Nenhum convite no momento. Mantenha o perfil aberto a convites.
           </p>
         ) : (
-          <ul className="mt-4 space-y-3">
+          <ul className="space-y-3">
             {data.invites.map((invite) => (
               <li
                 key={invite.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d0d7de] p-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#d0d7de] bg-[#fbfcfd] p-4"
               >
                 <div>
-                  <p className="font-medium">
+                  <p className="font-medium text-[#0d1117]">
                     {invite.fromUser.name ?? invite.fromUser.githubUsername}{" "}
                     convidou você para {invite.project.title}
                   </p>
                   {invite.issueTitle && (
-                    <p className="text-sm text-[#0969da]">
+                    <p className="mt-1 text-sm text-[#0969da]">
                       Issue #{invite.issueNumber}: {invite.issueTitle}
                       {invite.issueUrl ? (
                         <>
@@ -79,7 +97,7 @@ export default async function InboxPage() {
                             href={invite.issueUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="hover:underline"
+                            className="cursor-pointer hover:underline"
                           >
                             abrir
                           </a>
@@ -88,7 +106,7 @@ export default async function InboxPage() {
                     </p>
                   )}
                   {invite.message && (
-                    <p className="text-sm text-[#57606a]">{invite.message}</p>
+                    <p className="mt-1 text-sm text-[#57606a]">{invite.message}</p>
                   )}
                 </div>
                 <InviteActions inviteId={invite.id} />
@@ -96,27 +114,26 @@ export default async function InboxPage() {
             ))}
           </ul>
         )}
-      </section>
+      </InboxSection>
 
-      <section className="rounded-xl border border-[#d0d7de] bg-white p-6">
-        <h2 className="font-display text-2xl">Notificações</h2>
+      <InboxSection title="Notificações">
         {data.notifications.length === 0 ? (
-          <p className="mt-3 text-sm text-[#57606a]">
+          <p className="text-sm text-[#57606a]">
             Sem notificações ainda. Aceites e convites geram alertas aqui.
           </p>
         ) : (
-          <ul className="mt-4 space-y-3">
+          <ul className="space-y-3">
             {data.notifications.map((notification) => (
               <li
                 key={notification.id}
-                className={`rounded-lg border p-3 ${
+                className={`rounded-xl border p-4 ${
                   notification.read
                     ? "border-[#d0d7de] bg-white"
                     : "border-[#54aeff66] bg-[#ddf4ff]"
                 }`}
               >
-                <p className="font-medium">{notification.title}</p>
-                <p className="text-sm text-[#57606a]">{notification.body}</p>
+                <p className="font-medium text-[#0d1117]">{notification.title}</p>
+                <p className="mt-1 text-sm text-[#57606a]">{notification.body}</p>
                 {notification.href && (
                   <NotificationLink
                     notificationId={notification.id}
@@ -129,7 +146,7 @@ export default async function InboxPage() {
             ))}
           </ul>
         )}
-      </section>
+      </InboxSection>
     </div>
   );
 }

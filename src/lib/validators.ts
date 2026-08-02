@@ -11,6 +11,14 @@ const csvToList = (value: unknown) => {
 };
 
 export const profileSchema = z.object({
+  email: z.preprocess(
+    (value) => {
+      if (typeof value !== "string") return undefined;
+      const trimmed = value.trim();
+      return trimmed === "" ? undefined : trimmed;
+    },
+    z.string().email("Informe um e-mail válido.").optional()
+  ),
   bio: z.string().trim().max(1000).optional().default(""),
   languages: z
     .preprocess(csvToList, z.array(z.string().min(1)).min(1, "Informe pelo menos uma linguagem.")),
