@@ -10,6 +10,7 @@ import {
 } from "@/lib/github-url";
 import {
   collectIssueLabels,
+  normalizeSkill,
   rankCandidatesForProject,
   scoreProjectForUser,
   type ScoreHistoryInput,
@@ -163,13 +164,6 @@ export async function listProjects(filters: ProjectFilters = {}) {
   const projects = await prisma.project.findMany({
     where: {
       AND: [
-        language
-          ? {
-              languages: {
-                has: language,
-              },
-            }
-          : {},
         q
           ? {
               OR: [
@@ -185,8 +179,22 @@ export async function listProjects(filters: ProjectFilters = {}) {
     orderBy: [{ starsCount: "desc" }, { createdAt: "desc" }],
   });
 
+  const languageNeedle = language ? normalizeSkill(language) : null;
+  const filtered = languageNeedle
+    ? projects.filter((project) =>
+        project.languages.some((lang) => {
+          const normalized = normalizeSkill(lang);
+          return (
+            normalized === languageNeedle ||
+            normalized.includes(languageNeedle) ||
+            languageNeedle.includes(normalized)
+          );
+        })
+      )
+    : projects;
+
   if (!user) {
-    return projects.map((project) => ({
+    return filtered.map((project) => ({
       ...project,
       score: undefined as number | undefined,
       issueLabels: collectIssueLabels(project.issues),
@@ -195,7 +203,7 @@ export async function listProjects(filters: ProjectFilters = {}) {
 
   const history = await loadUserMatchHistory(user.id);
 
-  return projects
+  return filtered
     .map((project) => {
       const issueLabels = collectIssueLabels(project.issues);
       const breakdown = scoreProjectForUser(
@@ -349,6 +357,9 @@ export async function createProject(formData: FormData) {
     const githubLink = normalizeGithubRepoUrl(parsed.githubLink);
     const githubRepoIdRaw = String(formData.get("githubRepoId") ?? "").trim();
     const githubRepoId = githubRepoIdRaw || null;
+    const starsRaw = String(formData.get("starsCount") ?? "").trim();
+    let starsCount =
+      starsRaw && Number.isFinite(Number(starsRaw)) ? Number(starsRaw) : null;
 
     const existing = await findExistingProjectByGithub({
       githubLink,
@@ -360,6 +371,14 @@ export async function createProject(formData: FormData) {
       );
     }
 
+    // Se o form não trouxe stars (cadastro manual), tenta puxar do GitHub
+    if (starsCount == null) {
+      const meta = await fetchGithubRepoMeta(githubLink);
+      if (meta?.starsCount != null) {
+        starsCount = meta.starsCount;
+      }
+    }
+
     const project = await prisma.project.create({
       data: {
         title: parsed.title,
@@ -369,15 +388,24 @@ export async function createProject(formData: FormData) {
         languages: parsed.languages,
         tags: parsed.tags,
         lookingFor: parsed.lookingFor,
+        starsCount,
         source: githubRepoId ? "github_import" : "manual",
         ownerId: user.id,
       },
     });
 
+    // Best-effort: sync good-first issues right after publish
+    try {
+      await syncProjectIssues(project.id);
+    } catch {
+      // publish succeeds even if GitHub sync fails (rate limit, private, etc.)
+    }
+
     revalidatePath("/discover");
     revalidatePath("/projects/new");
     revalidatePath("/for-you");
     revalidatePath("/dashboard");
+    revalidatePath(`/projects/${project.id}`);
     return project.id;
   });
 }
@@ -1105,11 +1133,10 @@ export async function markNotificationRead(notificationId: string) {
 export async function getInboxData() {
   const user = await requireUser();
 
-  const [ownedProjectIds, interests, invites, notifications, openContributors] =
-    await Promise.all([
+  const [ownedProjects, interests, invites, notifications] = await Promise.all([
       prisma.project.findMany({
         where: { ownerId: user.id },
-        select: { id: true },
+        select: { id: true, title: true },
       }),
       prisma.matchInterest.findMany({
         where: {
@@ -1157,33 +1184,13 @@ export async function getInboxData() {
         orderBy: { createdAt: "desc" },
         take: 30,
       }),
-      prisma.user.findMany({
-        where: {
-          openToInvites: true,
-          id: { not: user.id },
-        },
-        select: {
-          id: true,
-          name: true,
-          githubUsername: true,
-          languages: true,
-          bio: true,
-          image: true,
-        },
-        take: 20,
-        orderBy: { updatedAt: "desc" },
-      }),
     ]);
 
   return {
-    ownedProjectIds: ownedProjectIds.map((p) => p.id),
+    ownedProjectIds: ownedProjects.map((p) => p.id),
     interests,
     invites,
     notifications,
-    openContributors,
-    projects: await prisma.project.findMany({
-      where: { ownerId: user.id },
-      select: { id: true, title: true },
-    }),
+    projects: ownedProjects,
   };
 }

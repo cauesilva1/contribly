@@ -16,7 +16,7 @@ Plataforma open source para conectar **contribuidores** a projetos que precisam 
 - Onboarding pós-login
 - Publicar projeto manualmente ou importar por URL do GitHub
 - Descobrir com busca/filtros
-- Swipe (interesse / passar)
+- Swipe (interesse / passar) com gesto e botões
 - Inbox: interesses, convites e notificações in-app
 
 ### Fase 3
@@ -24,6 +24,7 @@ Plataforma open source para conectar **contribuidores** a projetos que precisam 
 - Sync em lote de issues + rota cron (`/api/cron/sync-issues`)
 - Painel do mantenedor com analytics (taxa de aceite, stars) e candidatos sugeridos
 - Metadados extras do GitHub (stars, última sync) em cards e detalhe
+- Autocomplete de skills, toast de perfil, sitemap de projetos, CI
 
 ## Setup local
 

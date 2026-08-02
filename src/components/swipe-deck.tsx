@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { Heart, X } from "lucide-react";
 import { toast } from "sonner";
@@ -24,10 +24,15 @@ type SwipeProject = {
   };
 };
 
+const SWIPE_THRESHOLD = 110;
+
 export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
   const [index, setIndex] = useState(0);
   const [pending, startTransition] = useTransition();
   const [exit, setExit] = useState<"left" | "right" | null>(null);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startX = useRef(0);
   const current = projects[index];
   const next = projects[index + 1];
 
@@ -45,6 +50,8 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
   function decide(interested: boolean) {
     if (pending || exit) return;
     const direction = interested ? "right" : "left";
+    setDragging(false);
+    setDragX(0);
     setExit(direction);
 
     startTransition(async () => {
@@ -67,10 +74,40 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
     });
   }
 
+  function onPointerDown(event: React.PointerEvent<HTMLElement>) {
+    if (pending || exit) return;
+    if ((event.target as HTMLElement).closest("a,button")) return;
+    startX.current = event.clientX;
+    setDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function onPointerMove(event: React.PointerEvent<HTMLElement>) {
+    if (!dragging || pending || exit) return;
+    setDragX(event.clientX - startX.current);
+  }
+
+  function onPointerUp(event: React.PointerEvent<HTMLElement>) {
+    if (!dragging) return;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    setDragging(false);
+    if (Math.abs(dragX) >= SWIPE_THRESHOLD) {
+      decide(dragX > 0);
+      return;
+    }
+    setDragX(0);
+  }
+
   const busy = pending || Boolean(exit);
+  const rotation = dragX / 28;
+  const likeOpacity = Math.min(1, Math.max(0, dragX / SWIPE_THRESHOLD));
+  const passOpacity = Math.min(1, Math.max(0, -dragX / SWIPE_THRESHOLD));
 
   return (
     <div className="mx-auto w-full max-w-3xl">
+      <p className="mb-3 text-center text-xs text-[#57606a]">
+        Arraste o card ou use os botões · direita = interesse · esquerda = passar
+      </p>
       <div className="flex items-center gap-2 sm:gap-4 md:gap-5">
         <button
           type="button"
@@ -82,7 +119,7 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
           <X className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={2.5} />
         </button>
 
-        <div className="relative h-[min(52vh,440px)] min-w-0 flex-1">
+        <div className="relative h-[min(52vh,440px)] min-w-0 flex-1 touch-none">
           {next ? (
             <article className="absolute inset-0 scale-[0.96] rounded-2xl border border-[#d0d7de] bg-white/80 p-5 opacity-70 shadow-[0_12px_30px_rgba(13,17,23,0.06)] sm:p-6 md:p-7">
               <p className="text-xs uppercase tracking-[0.2em] text-[#57606a]">
@@ -96,7 +133,22 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
 
           <article
             key={current.id}
-            className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl border border-[#d0d7de] bg-white p-5 shadow-[0_24px_60px_rgba(13,17,23,0.12)] sm:p-6 md:p-7 ${
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={() => {
+              setDragging(false);
+              setDragX(0);
+            }}
+            style={
+              exit
+                ? undefined
+                : {
+                    transform: `translateX(${dragX}px) rotate(${rotation}deg)`,
+                    transition: dragging ? "none" : "transform 0.2s ease",
+                  }
+            }
+            className={`absolute inset-0 flex cursor-grab flex-col overflow-hidden rounded-2xl border border-[#d0d7de] bg-white p-5 shadow-[0_24px_60px_rgba(13,17,23,0.12)] active:cursor-grabbing sm:p-6 md:p-7 ${
               exit === "right"
                 ? "swipe-exit-right"
                 : exit === "left"
@@ -104,11 +156,21 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
                   : ""
             }`}
           >
-            {exit === "right" ? (
-              <span className="swipe-stamp swipe-stamp-like">MATCH</span>
+            {exit === "right" || likeOpacity > 0.15 ? (
+              <span
+                className="swipe-stamp swipe-stamp-like"
+                style={exit ? undefined : { opacity: likeOpacity }}
+              >
+                MATCH
+              </span>
             ) : null}
-            {exit === "left" ? (
-              <span className="swipe-stamp swipe-stamp-nope">PASS</span>
+            {exit === "left" || passOpacity > 0.15 ? (
+              <span
+                className="swipe-stamp swipe-stamp-nope"
+                style={exit ? undefined : { opacity: passOpacity }}
+              >
+                PASS
+              </span>
             ) : null}
 
             <div className="flex items-center justify-between gap-3">
@@ -175,7 +237,9 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
               href={`/projects/${current.id}`}
               className="mt-3 inline-block cursor-pointer text-sm text-[#0969da] hover:underline"
               onClick={(event) => {
-                if (exit) event.preventDefault();
+                if (exit || dragging || Math.abs(dragX) > 8) {
+                  event.preventDefault();
+                }
               }}
             >
               Ver detalhes

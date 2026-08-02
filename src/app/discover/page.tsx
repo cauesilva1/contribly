@@ -20,8 +20,8 @@ export default async function DiscoverPage({
       <div className="mb-4">
         <h1 className="font-display text-3xl text-[#0d1117]">Descobrir projetos</h1>
         <p className="mt-2 text-[#57606a]">
-          Filtre por linguagem ou busque por título, descrição e tags. Com perfil
-          preenchido, a lista prioriza o seu match score.
+          Filtre por linguagem (ex.: typescript) ou busque por título, descrição
+          e tags. Com perfil preenchido, a lista prioriza o seu match score.
         </p>
       </div>
 

@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
-import { updateProfile } from "@/app/actions";
 import { requireUser } from "@/lib/session";
 import { isProfileComplete } from "@/lib/profile";
-import { Button } from "@/components/ui/button";
+import { ProfileForm } from "@/components/profile-form";
 import { SyncGithubProfileButton } from "@/components/sync-github-profile-button";
 
 export default async function OnboardingPage() {
@@ -29,79 +28,18 @@ export default async function OnboardingPage() {
         <SyncGithubProfileButton />
       </div>
 
-      <form action={updateProfile} className="surface-card mt-4 p-5">
-        <input type="hidden" name="fromOnboarding" value="1" />
-        <div className="field">
-          <label htmlFor="email">
-            E-mail {!user.email ? "(obrigatório)" : ""}
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            required={!user.email}
-            defaultValue={user.email ?? ""}
-            placeholder="seu@email.com"
-          />
-          {!user.email ? (
-            <p className="mt-1 text-xs text-[#57606a]">
-              O GitHub não enviou e-mail. Informe um para contato.
-            </p>
-          ) : null}
-        </div>
-        <div className="field">
-          <label htmlFor="languages">Linguagens / skills (obrigatório)</label>
-          <input
-            id="languages"
-            name="languages"
-            required
-            placeholder="TypeScript, Python, Go"
-            defaultValue={user.languages.join(", ")}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="interestTags">Interesses / tags</label>
-          <input
-            id="interestTags"
-            name="interestTags"
-            placeholder="docs, frontend, cli"
-            defaultValue={user.interestTags.join(", ")}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="experienceLevel">Experiência em open source</label>
-          <select
-            id="experienceLevel"
-            name="experienceLevel"
-            defaultValue={user.experienceLevel}
-          >
-            <option value="beginner">Iniciante</option>
-            <option value="intermediate">Intermediário</option>
-            <option value="advanced">Avançado</option>
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor="bio">Bio (opcional)</label>
-          <textarea
-            id="bio"
-            name="bio"
-            rows={4}
-            defaultValue={user.bio ?? ""}
-            placeholder="Ex.: gosto de docs, bugs iniciantes e front-end"
-          />
-        </div>
-        <label className="checkbox-row text-sm">
-          <input
-            type="checkbox"
-            name="openToInvites"
-            defaultChecked={user.openToInvites}
-          />
-          Estou aberto a receber convites
-        </label>
-        <Button type="submit" variant="primary" className="w-full">
-          Continuar para recomendações
-        </Button>
-      </form>
+      <div className="surface-card mt-4 p-5">
+        <ProfileForm
+          email={user.email}
+          emailRequired={!user.email}
+          bio={user.bio ?? ""}
+          languages={user.languages.join(", ")}
+          interestTags={user.interestTags.join(", ")}
+          experienceLevel={user.experienceLevel}
+          openToInvites={user.openToInvites}
+          fromOnboarding
+        />
+      </div>
     </div>
   );
 }

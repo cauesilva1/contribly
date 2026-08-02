@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/contribly?schema=public
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/contribly?schema=public
+      AUTH_SECRET: ci-build-secret-not-for-production
+      AUTH_URL: http://localhost:3000
+      AUTH_GITHUB_ID: ci-github-id
+      AUTH_GITHUB_SECRET: ci-github-secret
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Production build
+        run: npm run build

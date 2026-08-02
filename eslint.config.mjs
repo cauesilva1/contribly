@@ -18,8 +18,8 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "_legacy/**",
     ],
   },
 ];
-
 export default eslintConfig;

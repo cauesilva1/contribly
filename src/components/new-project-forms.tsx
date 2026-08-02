@@ -6,6 +6,11 @@ import { toast } from "sonner";
 import { createProject, previewGithubRepo } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { GithubIcon } from "@/components/github-icon";
+import { SkillAutocomplete } from "@/components/skill-autocomplete";
+import {
+  INTEREST_TAG_SUGGESTIONS,
+  LANGUAGE_SUGGESTIONS,
+} from "@/lib/skill-suggestions";
 
 type FormState = {
   githubLink: string;
@@ -15,6 +20,7 @@ type FormState = {
   languages: string;
   tags: string;
   lookingFor: string;
+  starsCount: number | null;
 };
 
 const emptyForm: FormState = {
@@ -25,6 +31,7 @@ const emptyForm: FormState = {
   languages: "",
   tags: "",
   lookingFor: "",
+  starsCount: null,
 };
 
 function looksLikeGithubRepo(url: string) {
@@ -37,6 +44,7 @@ export function NewProjectForms() {
   const [fetching, setFetching] = useState(false);
   const [fetched, setFetched] = useState(false);
   const [form, setForm] = useState<FormState>(emptyForm);
+  const [skillsKey, setSkillsKey] = useState(0);
   const lastFetchedUrl = useRef("");
 
   function updateField<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -66,7 +74,9 @@ export function NewProjectForms() {
         description: preview.description,
         languages: preview.languages,
         tags: preview.tags,
+        starsCount: preview.starsCount ?? null,
       }));
+      setSkillsKey((value) => value + 1);
       setFetched(true);
       toast.success(
         preview.starsCount
@@ -79,6 +89,7 @@ export function NewProjectForms() {
       setForm((current) => ({
         ...current,
         githubRepoId: "",
+        starsCount: null,
       }));
       toast.error(
         error instanceof Error ? error.message : "Falha ao ler o repositório"
@@ -94,14 +105,13 @@ export function NewProjectForms() {
       void pullFromGithub(form.githubLink);
     }, 550);
     return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.githubLink]);
 
   function onSubmit(formData: FormData) {
     startTransition(async () => {
       try {
         const id = await createProject(formData);
-        toast.success("Projeto publicado");
+        toast.success("Projeto publicado · issues sincronizadas quando possível");
         router.push(`/projects/${id}`);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Falha ao publicar");
@@ -125,6 +135,11 @@ export function NewProjectForms() {
 
         <form action={onSubmit} className="mt-5">
           <input type="hidden" name="githubRepoId" value={form.githubRepoId} />
+          <input
+            type="hidden"
+            name="starsCount"
+            value={form.starsCount ?? ""}
+          />
 
           <div className="field">
             <label htmlFor="githubLink">Link do GitHub</label>
@@ -184,38 +199,37 @@ export function NewProjectForms() {
             />
           </div>
 
-          <div className="field">
-            <label htmlFor="languages">Linguagens (vírgula)</label>
-            <input
-              id="languages"
-              name="languages"
-              value={form.languages}
-              onChange={(event) => updateField("languages", event.target.value)}
-              placeholder="TypeScript, Go"
-            />
-          </div>
+          <SkillAutocomplete
+            key={`languages-${skillsKey}`}
+            id="languages"
+            name="languages"
+            label="Linguagens"
+            defaultValue={form.languages}
+            placeholder="Digite para buscar…"
+            suggestions={LANGUAGE_SUGGESTIONS}
+            hint="Sugestões ao digitar. Enter adiciona."
+          />
 
-          <div className="field">
-            <label htmlFor="tags">Tags (vírgula)</label>
-            <input
-              id="tags"
-              name="tags"
-              value={form.tags}
-              onChange={(event) => updateField("tags", event.target.value)}
-              placeholder="docs, good-first-issue"
-            />
-          </div>
+          <SkillAutocomplete
+            key={`tags-${skillsKey}`}
+            id="tags"
+            name="tags"
+            label="Tags"
+            defaultValue={form.tags}
+            placeholder="Digite para buscar…"
+            suggestions={INTEREST_TAG_SUGGESTIONS}
+          />
 
-          <div className="field">
-            <label htmlFor="lookingFor">Buscando (vírgula)</label>
-            <input
-              id="lookingFor"
-              name="lookingFor"
-              value={form.lookingFor}
-              onChange={(event) => updateField("lookingFor", event.target.value)}
-              placeholder="frontend, docs, design"
-            />
-          </div>
+          <SkillAutocomplete
+            key={`lookingFor-${skillsKey}`}
+            id="lookingFor"
+            name="lookingFor"
+            label="Buscando"
+            defaultValue={form.lookingFor}
+            placeholder="Digite para buscar…"
+            suggestions={[...LANGUAGE_SUGGESTIONS, ...INTEREST_TAG_SUGGESTIONS]}
+            hint="Skills ou temas que o projeto precisa."
+          />
 
           <Button type="submit" variant="primary" disabled={pending || fetching}>
             {pending ? "Publicando..." : "Publicar"}
