@@ -31,6 +31,14 @@ enum ExperienceLevel {
   advanced
 }
 
+enum ContributorRole {
+  developer
+  designer
+  docs
+  community
+  other
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -39,6 +47,11 @@ model User {
   image         String?
   githubId      String?   @unique
   githubUsername String?
+  /// ID do usuário no Supabase Auth (futuro: verificação por e-mail).
+  supabaseUserId String?  @unique
+  /// Hash bcrypt para login e-mail/senha (sem verificação por e-mail por enquanto).
+  passwordHash  String?
+  role          ContributorRole @default(developer)
   bio           String?
   languages     String[]  @default([])
   interestTags  String[]  @default([])

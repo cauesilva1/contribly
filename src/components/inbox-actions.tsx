@@ -1,20 +1,27 @@
 "use client";
 
 import { useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { respondInterest, respondInvite } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 
 export function InterestActions({ interestId }: { interestId: string }) {
+  const t = useTranslations("common");
+  const tToast = useTranslations("toasts");
   const [pending, startTransition] = useTransition();
 
   function respond(accept: boolean) {
     startTransition(async () => {
       try {
         await respondInterest(interestId, accept);
-        toast.success(accept ? "Interesse aceito" : "Interesse recusado");
+        toast.success(
+          accept ? tToast("interestAccepted") : tToast("interestRejected")
+        );
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Falha ao responder");
+        toast.error(
+          error instanceof Error ? error.message : tToast("respondFailed")
+        );
       }
     });
   }
@@ -28,7 +35,7 @@ export function InterestActions({ interestId }: { interestId: string }) {
         disabled={pending}
         onClick={() => respond(true)}
       >
-        Aceitar
+        {t("accept")}
       </Button>
       <Button
         type="button"
@@ -37,22 +44,28 @@ export function InterestActions({ interestId }: { interestId: string }) {
         disabled={pending}
         onClick={() => respond(false)}
       >
-        Recusar
+        {t("reject")}
       </Button>
     </div>
   );
 }
 
 export function InviteActions({ inviteId }: { inviteId: string }) {
+  const t = useTranslations("common");
+  const tToast = useTranslations("toasts");
   const [pending, startTransition] = useTransition();
 
   function respond(accept: boolean) {
     startTransition(async () => {
       try {
         await respondInvite(inviteId, accept);
-        toast.success(accept ? "Convite aceito" : "Convite recusado");
+        toast.success(
+          accept ? tToast("inviteAccepted") : tToast("inviteRejected")
+        );
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Falha ao responder");
+        toast.error(
+          error instanceof Error ? error.message : tToast("respondFailed")
+        );
       }
     });
   }
@@ -66,7 +79,7 @@ export function InviteActions({ inviteId }: { inviteId: string }) {
         disabled={pending}
         onClick={() => respond(true)}
       >
-        Aceitar
+        {t("accept")}
       </Button>
       <Button
         type="button"
@@ -75,7 +88,7 @@ export function InviteActions({ inviteId }: { inviteId: string }) {
         disabled={pending}
         onClick={() => respond(false)}
       >
-        Recusar
+        {t("reject")}
       </Button>
     </div>
   );

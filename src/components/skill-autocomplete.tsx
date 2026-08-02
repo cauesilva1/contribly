@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   filterSkillSuggestions,
   parseCsvSkills,
@@ -25,11 +26,13 @@ export function SkillAutocomplete({
   label,
   required = false,
   defaultValue = "",
-  placeholder = "Comece a digitar…",
+  placeholder,
   suggestions,
   hint,
   onDirty,
 }: SkillAutocompleteProps) {
+  const t = useTranslations("skillAutocomplete");
+  const effectivePlaceholder = placeholder ?? t("defaultPlaceholder");
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,7 +52,7 @@ export function SkillAutocomplete({
     !matches.some((item) => item.toLowerCase() === query.trim().toLowerCase());
 
   const options = canAddCustom
-    ? [...matches, `Adicionar “${query.trim()}”`]
+    ? [...matches, t("addOption", { query: query.trim() })]
     : matches;
 
   useEffect(() => {
@@ -170,7 +173,7 @@ export function SkillAutocomplete({
           >
             {value}
             <X className="h-3.5 w-3.5" aria-hidden />
-            <span className="sr-only">Remover {value}</span>
+            <span className="sr-only">{t("removeLabel", { value })}</span>
           </button>
         ))}
         <input
@@ -182,7 +185,9 @@ export function SkillAutocomplete({
           aria-expanded={open}
           aria-controls={listId}
           aria-autocomplete="list"
-          placeholder={values.length === 0 ? placeholder : "Adicionar…"}
+          placeholder={
+            values.length === 0 ? effectivePlaceholder : t("addingPlaceholder")
+          }
           onFocus={() => setOpen(true)}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -197,7 +202,6 @@ export function SkillAutocomplete({
       {open && options.length > 0 ? (
         <ul id={listId} role="listbox" className="skill-suggestions">
           {options.map((option, index) => {
-            const isCustom = canAddCustom && index === options.length - 1;
             return (
               <li key={`${option}-${index}`} role="option" aria-selected={index === activeIndex}>
                 <button
@@ -210,13 +214,7 @@ export function SkillAutocomplete({
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => chooseOption(index)}
                 >
-                  {isCustom ? (
-                    <>
-                      Adicionar <strong>“{query.trim()}”</strong>
-                    </>
-                  ) : (
-                    option
-                  )}
+                  {option}
                 </button>
               </li>
             );
