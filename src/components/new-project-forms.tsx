@@ -6,6 +6,10 @@ import { toast } from "sonner";
 import { createProject, previewGithubRepo } from "@/app/actions";
 import { Button } from "@/components/ui/button";
 import { GithubIcon } from "@/components/github-icon";
+import {
+  GithubRepoPicker,
+  type PickedGithubRepo,
+} from "@/components/github-repo-picker";
 import { SkillAutocomplete } from "@/components/skill-autocomplete";
 import { useRouter } from "@/i18n/navigation";
 import {
@@ -22,6 +26,7 @@ type FormState = {
   tags: string;
   lookingFor: string;
   starsCount: number | null;
+  isPrivate: boolean;
 };
 
 const emptyForm: FormState = {
@@ -33,13 +38,19 @@ const emptyForm: FormState = {
   tags: "",
   lookingFor: "",
   starsCount: null,
+  isPrivate: false,
 };
 
 function looksLikeGithubRepo(url: string) {
   return /github\.com\/[^/\s]+\/[^/\s#?]+/i.test(url.trim());
 }
 
-export function NewProjectForms() {
+type Props = {
+  githubConnected: boolean;
+  hasRepoScope: boolean;
+};
+
+export function NewProjectForms({ githubConnected, hasRepoScope }: Props) {
   const t = useTranslations("newProject");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -77,13 +88,16 @@ export function NewProjectForms() {
         languages: preview.languages,
         tags: preview.tags,
         starsCount: preview.starsCount ?? null,
+        isPrivate: preview.isPrivate,
       }));
       setSkillsKey((value) => value + 1);
       setFetched(true);
       toast.success(
-        preview.starsCount
-          ? t("dataPulledWithStars", { stars: preview.starsCount })
-          : t("dataPulled")
+        preview.isPrivate
+          ? t("dataPulledPrivate")
+          : preview.starsCount
+            ? t("dataPulledWithStars", { stars: preview.starsCount })
+            : t("dataPulled")
       );
     } catch (error) {
       lastFetchedUrl.current = "";
@@ -92,6 +106,7 @@ export function NewProjectForms() {
         ...current,
         githubRepoId: "",
         starsCount: null,
+        isPrivate: false,
       }));
       toast.error(
         error instanceof Error ? error.message : t("fetchFailed")
@@ -99,6 +114,27 @@ export function NewProjectForms() {
     } finally {
       setFetching(false);
     }
+  }
+
+  function applyPickedRepo(repo: PickedGithubRepo) {
+    // Limpa cache para o preview completo rodar (useEffect / pull)
+    lastFetchedUrl.current = "";
+    setForm((current) => ({
+      ...current,
+      githubLink: repo.htmlUrl,
+      githubRepoId: repo.id,
+      title: repo.fullName,
+      description:
+        repo.description?.trim() ||
+        current.description ||
+        `Repository ${repo.fullName}`,
+      languages: repo.language || current.languages,
+      starsCount: repo.starsCount || null,
+      isPrivate: repo.isPrivate,
+    }));
+    setSkillsKey((value) => value + 1);
+    setFetched(true);
+    toast.success(t("repoSelected", { name: repo.fullName }));
   }
 
   useEffect(() => {
@@ -132,12 +168,26 @@ export function NewProjectForms() {
         </h1>
         <p className="mt-2 text-sm text-[#57606a]">{t("description")}</p>
 
-        <form action={onSubmit} className="mt-5">
+        <div className="mt-5">
+          <GithubRepoPicker
+            connected={githubConnected}
+            hasRepoScope={hasRepoScope}
+            selectedUrl={form.githubLink}
+            onPick={applyPickedRepo}
+          />
+        </div>
+
+        <form action={onSubmit}>
           <input type="hidden" name="githubRepoId" value={form.githubRepoId} />
           <input
             type="hidden"
             name="starsCount"
             value={form.starsCount ?? ""}
+          />
+          <input
+            type="hidden"
+            name="isPrivate"
+            value={form.isPrivate ? "1" : "0"}
           />
 
           <div className="field">
@@ -164,9 +214,14 @@ export function NewProjectForms() {
               ) : null}
             </div>
             {fetched ? (
-              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#1a7f37]">
+              <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-[#1a7f37]">
                 <GithubIcon className="h-3.5 w-3.5" />
                 {t("filledFromGithub")}
+                {form.isPrivate ? (
+                  <span className="rounded bg-[#fff8c5] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#9a6700]">
+                    {t("privateBadge")}
+                  </span>
+                ) : null}
               </p>
             ) : null}
           </div>

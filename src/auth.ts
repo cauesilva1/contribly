@@ -14,7 +14,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       allowDangerousEmailAccountLinking: true,
       authorization: {
         params: {
-          scope: "read:user user:email",
+          // repo: listar/importar públicos e privados (estilo Vercel)
+          scope: "read:user user:email repo",
         },
       },
     }),

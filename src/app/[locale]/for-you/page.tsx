@@ -47,6 +47,7 @@ export default async function ForYouPage({ params }: Props) {
                 ownerName={project.owner.name}
                 score={project.score}
                 starsCount={project.starsCount}
+                isPrivate={project.isPrivate}
                 issuesCount={project._count.issues}
                 issuesSyncedAt={project.issuesSyncedAt}
               />

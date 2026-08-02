@@ -11,6 +11,7 @@ type ProjectCardProps = {
   ownerName?: string | null;
   score?: number;
   starsCount?: number | null;
+  isPrivate?: boolean;
   issuesCount?: number;
   issuesSyncedAt?: Date | string | null;
   showJoinCta?: boolean;
@@ -31,6 +32,7 @@ export async function ProjectCard({
   ownerName,
   score,
   starsCount,
+  isPrivate = false,
   issuesCount,
   issuesSyncedAt,
   showJoinCta = false,
@@ -70,6 +72,11 @@ export async function ProjectCard({
         {description}
       </p>
       <div className="mt-3 flex flex-wrap gap-1.5">
+        {isPrivate ? (
+          <span className="rounded-md bg-[#fff8c5] px-2 py-0.5 text-xs font-medium text-[#9a6700]">
+            {t("private")}
+          </span>
+        ) : null}
         {typeof starsCount === "number" && starsCount > 0 && (
           <span className="rounded-md bg-[#fff8c5] px-2 py-0.5 text-xs text-[#9a6700]">
             ★ {formatStars(starsCount)}
@@ -120,14 +127,16 @@ export async function ProjectCard({
             {t("wantToJoin")}
           </Link>
         ) : null}
-        <a
-          href={githubLink}
-          target="_blank"
-          rel="noreferrer"
-          className="cursor-pointer rounded-md border border-[#d0d7de] px-3 py-1.5 text-xs text-[#24292f] transition-colors hover:bg-[#f6f8fa]"
-        >
-          {t("github")}
-        </a>
+        {!isPrivate ? (
+          <a
+            href={githubLink}
+            target="_blank"
+            rel="noreferrer"
+            className="cursor-pointer rounded-md border border-[#d0d7de] px-3 py-1.5 text-xs text-[#24292f] transition-colors hover:bg-[#f6f8fa]"
+          >
+            {t("github")}
+          </a>
+        ) : null}
       </div>
     </article>
   );

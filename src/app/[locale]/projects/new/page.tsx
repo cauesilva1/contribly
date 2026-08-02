@@ -1,6 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
-import { requireUser } from "@/lib/session";
+import { getGithubPublishAccess } from "@/app/actions";
 import { NewProjectForms } from "@/components/new-project-forms";
+import { requireUser } from "@/lib/session";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -11,5 +12,12 @@ export default async function NewProjectPage({ params }: Props) {
   setRequestLocale(locale);
 
   await requireUser();
-  return <NewProjectForms />;
+  const access = await getGithubPublishAccess();
+
+  return (
+    <NewProjectForms
+      githubConnected={access.connected}
+      hasRepoScope={access.hasRepoScope}
+    />
+  );
 }

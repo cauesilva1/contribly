@@ -124,6 +124,7 @@ export default async function HomePage({ params }: Props) {
                   tags={project.tags}
                   githubLink={project.githubLink}
                   ownerName={project.owner.name}
+                  isPrivate={project.isPrivate}
                 />
               ))}
             </div>

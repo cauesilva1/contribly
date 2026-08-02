@@ -280,7 +280,19 @@
   "newProject": {
     "eyebrow": "Publish",
     "title": "Publish project",
-    "description": "Paste the GitHub link — we'll fill in the title, description, languages, and tags. Edit whatever you want.",
+    "description": "Pick a repo from your GitHub (public or private) or paste a link — we'll fill the rest.",
+    "exploreGithub": "Import from GitHub",
+    "exploreHide": "Hide repos",
+    "exploreHint": "Same idea as Vercel — browse your account and select a repo.",
+    "exploreSearchPlaceholder": "Search your repositories…",
+    "exploreLoading": "Loading your repositories…",
+    "exploreEmpty": "No repositories found",
+    "exploreFailed": "Couldn't load repositories",
+    "connectGithubExplore": "Connect GitHub to browse repos",
+    "connectGithubRequired": "Connect GitHub first to browse your repositories",
+    "repoSelected": "Selected {name}",
+    "privateBadge": "Private",
+    "dataPulledPrivate": "Private repo loaded — only people you invite can contribute meaningfully",
     "githubLinkLabel": "GitHub link",
     "githubLinkPlaceholder": "https://github.com/org/repo",
     "fetching": "Fetching...",
@@ -456,7 +468,8 @@
     "by": "by {name}",
     "viewDetails": "View details",
     "github": "GitHub",
-    "wantToJoin": "I want to join"
+    "wantToJoin": "I want to join",
+    "private": "Private"
   },
   "userMenu": {
     "profile": "Profile",

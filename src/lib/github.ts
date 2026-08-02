@@ -65,16 +65,21 @@ export async function fetchGoodFirstIssues(githubLink: string) {
   return results.slice(0, 20);
 }
 
-export async function fetchGithubRepoMeta(githubLink: string) {
+export async function fetchGithubRepoMeta(
+  githubLink: string,
+  options?: { accessToken?: string | null }
+) {
   const parsed = parseGithubRepo(githubLink);
   if (!parsed) return null;
 
   const headers = {
     Accept: "application/vnd.github+json",
     "User-Agent": "contribly",
-    ...(process.env.GITHUB_TOKEN
-      ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
-      : {}),
+    ...(options?.accessToken
+      ? { Authorization: `Bearer ${options.accessToken}` }
+      : process.env.GITHUB_TOKEN
+        ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+        : {}),
   };
 
   const response = await fetchGithubWithRetry(
@@ -96,6 +101,7 @@ export async function fetchGithubRepoMeta(githubLink: string) {
     language?: string | null;
     topics?: string[];
     description?: string | null;
+    private?: boolean;
   };
 
   let languages: string[] = data.language ? [data.language] : [];
@@ -126,10 +132,76 @@ export async function fetchGithubRepoMeta(githubLink: string) {
     language: data.language ?? null,
     languages,
     topics: data.topics ?? [],
+    isPrivate: Boolean(data.private),
     description:
       data.description?.trim() ||
       `Repositório ${data.full_name ?? `${parsed.owner}/${parsed.repo}`}`,
   };
+}
+
+export type GithubRepoListItem = {
+  id: string;
+  fullName: string;
+  htmlUrl: string;
+  description: string | null;
+  language: string | null;
+  starsCount: number;
+  isPrivate: boolean;
+  updatedAt: string | null;
+};
+
+/** Lista repos do usuário autenticado (públicos + privados com scope repo). */
+export async function listGithubReposForToken(
+  accessToken: string,
+  options?: { query?: string; limit?: number }
+): Promise<GithubRepoListItem[]> {
+  const limit = options?.limit ?? 40;
+  const query = options?.query?.trim().toLowerCase() ?? "";
+
+  const response = await fetchGithubWithRetry(
+    "https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member",
+    {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "contribly",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      next: { revalidate: 0 },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`GitHub repos HTTP ${response.status}`);
+  }
+
+  const data = (await response.json()) as Array<{
+    id: number;
+    full_name: string;
+    html_url: string;
+    description: string | null;
+    language: string | null;
+    stargazers_count: number;
+    private: boolean;
+    fork?: boolean;
+    updated_at?: string;
+  }>;
+
+  return data
+    .filter((repo) => !repo.fork)
+    .filter((repo) =>
+      query ? repo.full_name.toLowerCase().includes(query) : true
+    )
+    .slice(0, limit)
+    .map((repo) => ({
+      id: String(repo.id),
+      fullName: repo.full_name,
+      htmlUrl: repo.html_url.replace(/\/$/, ""),
+      description: repo.description,
+      language: repo.language,
+      starsCount: repo.stargazers_count ?? 0,
+      isPrivate: Boolean(repo.private),
+      updatedAt: repo.updated_at ?? null,
+    }));
 }
 
 /** Confirma se o token do usuário tem admin/maintain no repo (claim de ownership). */

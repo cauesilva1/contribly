@@ -118,6 +118,7 @@ model Project {
   lookingFor   String[]      @default([])
   githubLink   String
   githubRepoId String?
+  isPrivate    Boolean       @default(false)
   source       ProjectSource @default(manual)
   starsCount   Int?
   issuesSyncedAt DateTime?

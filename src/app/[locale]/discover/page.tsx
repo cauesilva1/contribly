@@ -106,6 +106,7 @@ export default async function DiscoverPage({ params, searchParams }: Props) {
               ownerName={project.owner.name}
               score={project.score}
               starsCount={project.starsCount}
+              isPrivate={project.isPrivate}
               issuesCount={project._count.issues}
               issuesSyncedAt={project.issuesSyncedAt}
               showJoinCta={!user}

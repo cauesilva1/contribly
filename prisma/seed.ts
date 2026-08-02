@@ -2,14 +2,18 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-/** Repos OSS reais para popular descoberta / swipe / pra você. */
-const REAL_REPOS = [
+/**
+ * Curadoria manual: OSS com cultura de contribuição / good first issue.
+ * Complementada em runtime pela busca na API do GitHub.
+ */
+const CURATED_REPOS = [
   "facebook/react",
   "vercel/next.js",
   "vuejs/core",
   "angular/angular",
   "microsoft/TypeScript",
   "microsoft/vscode",
+  "microsoft/terminal",
   "tailwindlabs/tailwindcss",
   "prisma/prisma",
   "nodejs/node",
@@ -24,7 +28,6 @@ const REAL_REPOS = [
   "pytorch/pytorch",
   "kubernetes/kubernetes",
   "hashicorp/terraform",
-  "docker/cli",
   "excalidraw/excalidraw",
   "freeCodeCamp/freeCodeCamp",
   "jestjs/jest",
@@ -35,7 +38,33 @@ const REAL_REPOS = [
   "remix-run/remix",
   "sveltejs/svelte",
   "langchain-ai/langchain",
+  "storybookjs/storybook",
+  "mermaid-js/mermaid",
+  "grafana/grafana",
+  "caddyserver/caddy",
+  "louislam/uptime-kuma",
+  "flutter/flutter",
+  "AppFlowy-IO/AppFlowy",
+  "twentyhq/twenty",
+  "SigNoz/signoz",
+  "HeyPuter/puter",
+  "firstcontributions/first-contributions",
+  "responsively-org/responsively-app",
+  "supabase/supabase",
+  "trpc/trpc",
+  "shadcn-ui/ui",
+  "biomejs/biome",
+  "vitest-dev/vitest",
+  "pnpm/pnpm",
+  "oven-sh/bun",
 ] as const;
+
+/** Listas / tutoriais que não são bons “projetos para fazer match”. */
+const SKIP_REPOS = new Set([
+  "practical-tutorials/project-based-learning",
+  "ytdl-org/youtube-dl",
+  "thinkswell/javascript-mini-projects",
+]);
 
 type GithubRepo = {
   id: number;
@@ -66,6 +95,10 @@ function githubHeaders() {
   };
 }
 
+async function sleep(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function fetchRepo(fullName: string): Promise<GithubRepo | null> {
   const response = await fetch(`https://api.github.com/repos/${fullName}`, {
     headers: githubHeaders(),
@@ -75,6 +108,43 @@ async function fetchRepo(fullName: string): Promise<GithubRepo | null> {
     return null;
   }
   return (await response.json()) as GithubRepo;
+}
+
+async function searchFriendlyRepos(limit = 40): Promise<string[]> {
+  const queries = [
+    "good-first-issues:>5 stars:>3000 is:public",
+    "topic:good-first-issue stars:>2000 is:public",
+  ];
+  const found = new Set<string>();
+
+  for (const q of queries) {
+    const params = new URLSearchParams({
+      q,
+      sort: "stars",
+      order: "desc",
+      per_page: "30",
+    });
+    const response = await fetch(
+      `https://api.github.com/search/repositories?${params}`,
+      { headers: githubHeaders() }
+    );
+    if (!response.ok) {
+      console.warn(`GitHub search failed (${response.status}): ${q}`);
+      await sleep(1500);
+      continue;
+    }
+    const data = (await response.json()) as {
+      items?: Array<{ full_name: string }>;
+    };
+    for (const item of data.items ?? []) {
+      if (!SKIP_REPOS.has(item.full_name)) {
+        found.add(item.full_name);
+      }
+    }
+    await sleep(1200);
+  }
+
+  return Array.from(found).slice(0, limit);
 }
 
 async function fetchGoodFirstIssues(fullName: string): Promise<GithubIssue[]> {
@@ -168,13 +238,24 @@ async function main() {
     );
   }
 
+  console.log("Buscando projetos no GitHub…");
+  const searched = await searchFriendlyRepos(35);
+  const repoNames = Array.from(
+    new Set([...CURATED_REPOS, ...searched].filter((n) => !SKIP_REPOS.has(n)))
+  );
+  console.log(
+    `Lista final: ${repoNames.length} repos (${CURATED_REPOS.length} curados + busca)`
+  );
+
   let created = 0;
+  let updated = 0;
   let skipped = 0;
 
-  for (const fullName of REAL_REPOS) {
+  for (const fullName of repoNames) {
     const repo = await fetchRepo(fullName);
     if (!repo) {
       skipped += 1;
+      await sleep(250);
       continue;
     }
 
@@ -218,7 +299,26 @@ async function main() {
         },
       }));
 
-    if (!existing) created += 1;
+    if (existing) {
+      await prisma.project.update({
+        where: { id: existing.id },
+        data: {
+          description:
+            repo.description?.trim() ||
+            existing.description ||
+            `Repositório open source ${repo.full_name}`,
+          languages: langs.length ? langs : existing.languages,
+          tags: tags.length ? tags : existing.tags,
+          lookingFor: lookingFor.length ? lookingFor : existing.lookingFor,
+          starsCount: repo.stargazers_count ?? existing.starsCount,
+          githubRepoId: existing.githubRepoId ?? githubRepoId,
+          title: existing.source === "manual" ? existing.title : repo.full_name,
+        },
+      });
+      updated += 1;
+    } else {
+      created += 1;
+    }
 
     const issues = await fetchGoodFirstIssues(fullName);
     for (const issue of issues) {
@@ -252,12 +352,14 @@ async function main() {
     }
 
     // Evita estourar rate limit na API pública
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await sleep(280);
   }
 
   const total = await prisma.project.count();
   console.log("Seed OK");
-  console.log(`Projetos novos: ${created} · pulados/falha: ${skipped}`);
+  console.log(
+    `Novos: ${created} · atualizados: ${updated} · falha/skip: ${skipped}`
+  );
   console.log(`Total de projetos no banco: ${total}`);
   console.log("Maintainer demo: maintainer@contribly.demo");
 }

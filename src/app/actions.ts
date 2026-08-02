@@ -384,6 +384,7 @@ export async function createProject(formData: FormData) {
     const starsRaw = String(formData.get("starsCount") ?? "").trim();
     let starsCount =
       starsRaw && Number.isFinite(Number(starsRaw)) ? Number(starsRaw) : null;
+    const isPrivateFlag = String(formData.get("isPrivate") ?? "") === "1";
 
     const existing = await findExistingProjectByGithub({
       githubLink,
@@ -395,12 +396,21 @@ export async function createProject(formData: FormData) {
       );
     }
 
-    // Se o form não trouxe stars (cadastro manual), tenta puxar do GitHub
-    if (starsCount == null) {
-      const meta = await fetchGithubRepoMeta(githubLink);
-      if (meta?.starsCount != null) {
+    let isPrivate = isPrivateFlag;
+    const accessToken = await getGithubAccessTokenForUser(user.id).catch(
+      () => null
+    );
+
+    const meta = await fetchGithubRepoMeta(githubLink, { accessToken });
+    if (meta) {
+      if (starsCount == null && meta.starsCount != null) {
         starsCount = meta.starsCount;
       }
+      isPrivate = meta.isPrivate;
+    } else if (isPrivateFlag && !accessToken) {
+      throw new ActionError(
+        "Repos privados exigem login com GitHub. Conecte sua conta e tente de novo."
+      );
     }
 
     const project = await prisma.project.create({
@@ -409,6 +419,7 @@ export async function createProject(formData: FormData) {
         description: parsed.description,
         githubLink,
         githubRepoId,
+        isPrivate,
         languages: parsed.languages,
         tags: parsed.tags,
         lookingFor: parsed.lookingFor,
@@ -418,11 +429,13 @@ export async function createProject(formData: FormData) {
       },
     });
 
-    // Best-effort: sync good-first issues right after publish
-    try {
-      await syncProjectIssues(project.id);
-    } catch {
-      // publish succeeds even if GitHub sync fails (rate limit, private, etc.)
+    // Best-effort: sync good-first issues (pula em privado sem labels públicas)
+    if (!isPrivate) {
+      try {
+        await syncProjectIssues(project.id);
+      } catch {
+        // publish succeeds even if GitHub sync fails (rate limit, etc.)
+      }
     }
 
     revalidatePath("/discover");
@@ -436,16 +449,21 @@ export async function createProject(formData: FormData) {
 
 export async function previewGithubRepo(githubUrl: string) {
   return withActionError(async () => {
-    await requireUser();
+    const user = await requireUser();
 
     if (!/github\.com\/[^/]+\/[^/]+/i.test(githubUrl.trim())) {
       throw new ActionError("Cole um link de repositório GitHub válido.");
     }
 
-    const meta = await fetchGithubRepoMeta(githubUrl);
+    const accessToken = await getGithubAccessTokenForUser(user.id).catch(
+      () => null
+    );
+    const meta = await fetchGithubRepoMeta(githubUrl, { accessToken });
     if (!meta) {
       throw new ActionError(
-        "Não foi possível ler esse repositório. Confira o link ou o limite da API."
+        accessToken
+          ? "Não foi possível ler esse repositório. Confira o link ou suas permissões."
+          : "Não foi possível ler esse repositório. Conecte o GitHub ou confira o link (repos privados exigem login com GitHub)."
       );
     }
 
@@ -467,8 +485,46 @@ export async function previewGithubRepo(githubUrl: string) {
       languages: meta.languages.join(", "),
       tags: meta.topics.join(", "),
       starsCount: meta.starsCount,
+      isPrivate: meta.isPrivate,
     };
   });
+}
+
+export async function listMyGithubRepos(query?: string) {
+  return withActionError(async () => {
+    const user = await requireUser();
+    const accessToken = await getGithubAccessTokenForUser(user.id);
+    if (!accessToken) {
+      throw new ActionError("GITHUB_CONNECT_REQUIRED");
+    }
+
+    const { listGithubReposForToken } = await import("@/lib/github");
+    try {
+      return await listGithubReposForToken(accessToken, {
+        query,
+        limit: 50,
+      });
+    } catch {
+      throw new ActionError(
+        "Não foi possível listar seus repositórios. Saia e entre de novo com o GitHub para autorizar o acesso."
+      );
+    }
+  });
+}
+
+export async function getGithubPublishAccess() {
+  const user = await requireUser();
+  const account = await prisma.account.findFirst({
+    where: { userId: user.id, provider: "github" },
+    select: { scope: true, access_token: true },
+  });
+  const scope = account?.scope ?? "";
+  const hasRepoScope = /(^|\s)repo(\s|$)/.test(scope);
+  return {
+    connected: Boolean(account?.access_token),
+    hasRepoScope,
+    githubUsername: user.githubUsername ?? null,
+  };
 }
 
 export async function importGithubProject(formData: FormData) {
