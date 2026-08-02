@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   const next = searchParams.get("next") ?? "/onboarding";
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/auth/login?error=missing_code`);
+    return NextResponse.redirect(`${origin}/auth?error=missing_code`);
   }
 
   try {
@@ -21,9 +21,7 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error || !data.user?.email) {
-      return NextResponse.redirect(
-        `${origin}/auth/login?error=verify_failed`
-      );
+      return NextResponse.redirect(`${origin}/auth?error=verify_failed`);
     }
 
     const meta = data.user.user_metadata as {
@@ -41,6 +39,6 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(`${origin}${next.startsWith("/") ? next : "/onboarding"}`);
   } catch {
-    return NextResponse.redirect(`${origin}/auth/login?error=verify_failed`);
+    return NextResponse.redirect(`${origin}/auth?error=verify_failed`);
   }
 }

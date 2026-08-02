@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { signIn } from "@/auth";
 import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
-import { GithubIcon } from "@/components/github-icon";
 import { UserMenu } from "@/components/user-menu";
 import { getSession, getUnreadNotificationCount } from "@/lib/session";
 
@@ -55,22 +53,9 @@ export async function SiteHeader() {
                 githubUsername={session.user.githubUsername ?? null}
               />
             ) : (
-              <div className="flex items-center gap-2">
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/auth/login">E-mail</Link>
-                </Button>
-                <form
-                  action={async () => {
-                    "use server";
-                    await signIn("github", { redirectTo: "/onboarding" });
-                  }}
-                >
-                  <Button type="submit" variant="primary" size="sm">
-                    <GithubIcon className="h-4 w-4" />
-                    Entrar com GitHub
-                  </Button>
-                </form>
-              </div>
+              <Button asChild variant="primary" size="sm">
+                <Link href="/auth">Entrar</Link>
+              </Button>
             )}
           </div>
         </div>

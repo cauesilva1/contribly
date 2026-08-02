@@ -2,128 +2,69 @@
 
 Branch: `feature/email-password-auth`
 
-## Objetivo
+## UI
 
-Permitir contas **sem GitHub** (design, docs, community, etc.) com:
+Uma página só: **`/auth`**
 
-1. Cadastro e-mail + senha  
-2. **E-mail de verificação** (Supabase Auth)  
-3. Login e-mail + senha  
-4. Sessão unificada no app via bridge → **Auth.js / Prisma Session** (mesmo `requireUser()` do resto do produto)
+- Abas **Entrar** / **Criar conta**
+- **Continuar com GitHub**
+- Ou e-mail + senha (com verificação)
 
-GitHub OAuth continua igual na home.
+Header e home usam um único botão **Entrar** → `/auth` (sem poluir).
+
+Rotas antigas:
+- `/auth/login` → `/auth`
+- `/auth/signup` → `/auth?mode=signup`
+- `/auth/verify` — tela “cheque seu e-mail”
+- `/auth/callback` — após o link do e-mail
+
+## Ativar no Supabase (checklist)
+
+Projeto (pelo Postgres): `dyrfwycqpfpwjmhfznka`  
+URL: `https://dyrfwycqpfpwjmhfznka.supabase.co`
+
+1. Dashboard → **Authentication → Providers → Email**  
+   - Enabled: **ON**  
+   - Confirm email: **ON**
+2. **Authentication → URL Configuration**  
+   - Site URL: `http://localhost:3000` (dev) / `https://contribly.vercel.app` (prod)  
+   - Redirect URLs (adicione as duas):  
+     - `http://localhost:3000/auth/callback`  
+     - `https://contribly.vercel.app/auth/callback`
+3. **Authentication → Email Templates → Confirm signup**  
+   - Subject: `Confirm your Contribly account`  
+   - Body: cole o HTML de [`docs/email-templates/confirm-signup.html`](./email-templates/confirm-signup.html)  
+     (visual alinhado ao site: fundo `#eef3f8`, accent `#0969da`, botão escuro, tipografia serif no título)
+4. **Settings → API** → copie:  
+   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`  
+   - `anon` `public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+5. Local + Vercel: coloque as vars e reinicie / redeploy  
+6. Migration: `npx prisma migrate deploy` (role + `supabaseUserId`)
+
+Não dá para “ligar” Auth/e-mail só com a connection string do Postgres — precisa das keys **anon** no dashboard (ou Management API com access token pessoal).
+
+## Variáveis
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL="https://dyrfwycqpfpwjmhfznka.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
+# SUPABASE_SERVICE_ROLE_KEY=""  # opcional
+```
 
 ## Arquitetura
 
 ```
-[Signup/Login UI]
-       │
-       ▼
-[Supabase Auth]  ← senha + e-mail de confirmação
-       │
-       ▼ (confirmado)
-[bridgeSupabaseUserToAuthJs]
-       │  upsert User + Account(provider=supabase)
-       │  cria Session Auth.js + cookie
-       ▼
-[App Contribly]  ← middleware / requireUser inalterados
+/auth  →  GitHub (Auth.js)  OU  e-mail/senha (Supabase Auth)
+                │                         │
+                └──────────┬──────────────┘
+                           ▼
+              sessão Auth.js (Prisma Session)
+                           ▼
+                    requireUser() / app
 ```
 
-## Variáveis de ambiente
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ..."
-# Opcional por enquanto (admin / jobs futuros)
-# SUPABASE_SERVICE_ROLE_KEY="eyJ..."
-```
-
-No **Supabase Dashboard**:
-
-1. **Authentication → Providers → Email** → Enabled  
-2. **Confirm email** → ON (obrigatório para o fluxo de verificação)  
-3. **URL Configuration**  
-   - Site URL: `https://contribly.vercel.app` (ou `http://localhost:3000`)  
-   - Redirect URLs:  
-     - `http://localhost:3000/auth/callback`  
-     - `https://contribly.vercel.app/auth/callback`  
-
-## Rotas
-
-| Rota | Função |
-|------|--------|
-| `/auth/signup` | Criar conta + disparar e-mail |
-| `/auth/verify` | “Cheque sua caixa de entrada” + reenviar |
-| `/auth/login` | Entrar com e-mail/senha |
-| `/auth/callback` | Troca `code` do link do e-mail → sessão |
-
-## Modelo do e-mail de verificação
-
-O texto oficial é editável em **Supabase → Authentication → Email Templates → Confirm signup**.
-
-### Assunto (sugerido)
-
-```
-Confirm your Contribly account
-```
-
-### Corpo (HTML sugerido)
-
-Cole no template do Supabase (variáveis `{{ .ConfirmationURL }}`, `{{ .SiteURL }}`, `{{ .Email }}`):
-
-```html
-<h2>Welcome to Contribly</h2>
-<p>Hi,</p>
-<p>
-  Confirm your email (<strong>{{ .Email }}</strong>) to finish creating your
-  Contribly account — for contributors who help with code, design, docs, and more.
-</p>
-<p>
-  <a href="{{ .ConfirmationURL }}">Confirm email and continue</a>
-</p>
-<p style="color:#57606a;font-size:12px">
-  If you did not sign up, you can ignore this message.
-  Link from {{ .SiteURL }}.
-</p>
-```
-
-### Versão PT (opcional)
-
-```html
-<h2>Bem-vindo ao Contribly</h2>
-<p>Olá,</p>
-<p>
-  Confirme seu e-mail (<strong>{{ .Email }}</strong>) para ativar sua conta
-  no Contribly.
-</p>
-<p>
-  <a href="{{ .ConfirmationURL }}">Confirmar e-mail e continuar</a>
-</p>
-<p style="color:#57606a;font-size:12px">
-  Se você não criou esta conta, ignore esta mensagem.
-</p>
-```
-
-**Importante:** o link deve apontar para o fluxo do Supabase (use `{{ .ConfirmationURL }}`). O redirect configurado (`/auth/callback`) é para onde o usuário cai **depois** da confirmação.
-
-## Schema
-
-- `User.supabaseUserId` — id do Auth Supabase  
-- `User.role` — `developer | designer | docs | community | other`  
-- `Account` com `provider = "supabase"`  
-
-Senha **não** fica no Prisma — só no Supabase Auth.
-
-## Status desta branch
-
-- [x] Scaffold cliente Supabase + bridge de sessão  
-- [x] Signup / login / verify / callback  
-- [x] Modelo de e-mail de verificação  
-- [ ] Configurar projeto Supabase + envs na Vercel  
-- [ ] Rodar migration `20260802070000_email_auth_role`  
-- [ ] Polir onboarding para roles sem linguagens GitHub  
-- [ ] Testes E2E do fluxo completo  
+Senha fica só no Supabase Auth. Prisma guarda `User.supabaseUserId` + `User.role`.
 
 ## SMTP
 
-No free do Supabase, o e-mail de auth usa o SMTP deles (limites baixos). Depois pode ligar Resend/SMTP custom em **Project Settings → Auth → SMTP**.
+Free do Supabase: e-mails de auth pelo SMTP deles (limites baixos). Depois: SMTP custom / Resend no painel Auth.

@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { signIn } from "@/auth";
 import { listProjects } from "@/app/actions";
 import { AuthRequiredToast } from "@/components/auth-required-toast";
 import { BrandMark } from "@/components/brand-mark";
 import { EmptyState } from "@/components/empty-state";
-import { GithubIcon } from "@/components/github-icon";
 import { HeroCodePanel } from "@/components/hero-code-panel";
 import { ProjectCard } from "@/components/project-card";
 import { SiteFooter } from "@/components/site-footer";
@@ -51,17 +49,9 @@ export default async function HomePage() {
                   </Button>
                 </>
               ) : (
-                <form
-                  action={async () => {
-                    "use server";
-                    await signIn("github", { redirectTo: "/onboarding" });
-                  }}
-                >
-                  <Button type="submit" variant="primary" size="lg">
-                    <GithubIcon className="h-[1.1rem] w-[1.1rem]" />
-                    Entrar com GitHub
-                  </Button>
-                </form>
+                <Button asChild variant="primary" size="lg">
+                  <Link href="/auth">Entrar</Link>
+                </Button>
               )}
             </div>
           </div>

@@ -1,0 +1,139 @@
+<!--
+  Supabase → Authentication → Email Templates → Confirm signup
+  Subject: Confirm your Contribly account
+  Variables: {{ .ConfirmationURL }} {{ .Email }} {{ .SiteURL }}
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Confirm your Contribly account</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: #eef3f8;
+      color: #0d1117;
+      font-family: 'Source Sans 3', 'Segoe UI', Helvetica, Arial, sans-serif;
+    "
+  >
+    <table
+      role="presentation"
+      width="100%"
+      cellspacing="0"
+      cellpadding="0"
+      style="
+        background: radial-gradient(
+            circle at 12% 8%,
+            rgba(31, 111, 235, 0.14),
+            transparent 34%
+          ),
+          linear-gradient(180deg, #e8eef6 0%, #eef3f8 100%);
+        padding: 32px 16px;
+      "
+    >
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="100%"
+            cellspacing="0"
+            cellpadding="0"
+            style="max-width: 520px"
+          >
+            <tr>
+              <td style="padding-bottom: 20px; text-align: left">
+                <span
+                  style="
+                    display: inline-block;
+                    font-family: Georgia, 'Times New Roman', serif;
+                    font-size: 28px;
+                    color: #0d1117;
+                    letter-spacing: -0.02em;
+                  "
+                  >{ } Contribly</span
+                >
+              </td>
+            </tr>
+            <tr>
+              <td
+                style="
+                  background: #ffffff;
+                  border: 1px solid #d0d7de;
+                  border-radius: 12px;
+                  padding: 28px 28px 24px;
+                "
+              >
+                <p
+                  style="
+                    margin: 0 0 8px;
+                    font-size: 11px;
+                    letter-spacing: 0.22em;
+                    text-transform: uppercase;
+                    color: #0969da;
+                  "
+                >
+                  Open source matchmaking
+                </p>
+                <h1
+                  style="
+                    margin: 0 0 12px;
+                    font-family: Georgia, 'Times New Roman', serif;
+                    font-size: 28px;
+                    line-height: 1.15;
+                    color: #0d1117;
+                    font-weight: 600;
+                  "
+                >
+                  Confirm your email
+                </h1>
+                <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.55; color: #57606a">
+                  Hi — finish creating your Contribly account for
+                  <strong style="color: #0d1117">{{ .Email }}</strong>. After
+                  this you can discover projects, show interest, and match with
+                  maintainers.
+                </p>
+                <p style="margin: 0 0 24px; text-align: left">
+                  <a
+                    href="{{ .ConfirmationURL }}"
+                    style="
+                      display: inline-block;
+                      background: #24292f;
+                      color: #ffffff !important;
+                      text-decoration: none;
+                      font-size: 15px;
+                      font-weight: 600;
+                      padding: 12px 20px;
+                      border-radius: 8px;
+                    "
+                    >Confirm email and continue</a
+                  >
+                </p>
+                <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #8b949e">
+                  If the button doesn’t work, paste this link into your browser:<br />
+                  <a
+                    href="{{ .ConfirmationURL }}"
+                    style="color: #0969da; word-break: break-all"
+                    >{{ .ConfirmationURL }}</a
+                  >
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top: 18px; text-align: center">
+                <p style="margin: 0; font-size: 12px; color: #8b949e">
+                  If you didn’t sign up for Contribly, you can ignore this email.<br />
+                  <a href="{{ .SiteURL }}" style="color: #0969da; text-decoration: none"
+                    >{{ .SiteURL }}</a
+                  >
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

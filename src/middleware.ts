@@ -30,7 +30,7 @@ export function middleware(req: NextRequest) {
 
   if (isProtected && !hasSessionCookie(req)) {
     const url = req.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/auth";
     url.searchParams.set("auth", "required");
     return NextResponse.redirect(url);
   }
