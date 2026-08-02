@@ -16,25 +16,11 @@ function createSecureAdapter(): Adapter {
       if (!base.linkAccount) {
         throw new Error("Adapter linkAccount missing");
       }
-      return base.linkAccount({
+      await base.linkAccount({
         ...account,
         access_token: encryptToken(account.access_token) ?? undefined,
         refresh_token: encryptToken(account.refresh_token) ?? undefined,
       });
-    },
-    async updateAccount(data) {
-      if (!base.updateAccount) return;
-      const patch = { ...data } as typeof data & {
-        access_token?: string | null;
-        refresh_token?: string | null;
-      };
-      if (typeof patch.access_token === "string") {
-        patch.access_token = encryptToken(patch.access_token);
-      }
-      if (typeof patch.refresh_token === "string") {
-        patch.refresh_token = encryptToken(patch.refresh_token);
-      }
-      return base.updateAccount(patch);
     },
   };
 }

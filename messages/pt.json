@@ -62,7 +62,7 @@
     "loginTitle": "Login",
     "signupTitle": "Juntar-se",
     "loginHint": "GitHub ou e-mail e senha.",
-    "signupHint": "Crie com e-mail e senha (enviamos link de confirmação) ou GitHub.",
+    "signupHint": "Crie com e-mail e senha, ou GitHub.",
     "continueGithub": "Continuar com GitHub",
     "name": "Nome",
     "namePlaceholder": "Seu nome",

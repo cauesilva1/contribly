@@ -13,6 +13,7 @@ import {
   buildEmailVerifyUrl,
   createEmailVerificationToken,
   consumeEmailVerificationToken,
+  isEmailDeliveryConfigured,
   sendSignupVerificationEmail,
 } from "@/lib/email-verification";
 import { redirect } from "@/i18n/navigation";
@@ -43,6 +44,8 @@ export async function signUpWithEmail(formData: FormData) {
     const name = String(formData.get("name") ?? "").trim();
     const role = parseRole(formData.get("role"));
     const hdrs = await headers();
+    const locale = await getLocale();
+    const emailDelivery = isEmailDeliveryConfigured();
 
     if (!email || !email.includes("@")) {
       throw new ActionError("Informe um e-mail válido.");
@@ -60,16 +63,22 @@ export async function signUpWithEmail(formData: FormData) {
 
     const existing = await prisma.user.findUnique({ where: { email } });
 
-    // Anti-enumeration: same UX whether account already exists
     if (existing?.passwordHash || existing?.githubId) {
-      redirect({
-        href: `/auth?mode=login&verify=sent`,
-        locale: await getLocale(),
-      });
+      // Com Resend: mesma UX anti-enumeração. Sem Resend: erro genérico de login.
+      if (emailDelivery) {
+        redirect({ href: `/auth?mode=login&verify=sent`, locale });
+      }
+      throw new ActionError(
+        "Could not create this account. Try signing in or use GitHub."
+      );
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
     const displayName = name || email.split("@")[0];
+
+    // Sem provedor de e-mail: entra na hora (MVP). Takeover GitHub continua bloqueado
+    // (sem allowDangerousEmailAccountLinking).
+    const emailVerified = emailDelivery ? null : new Date();
 
     const user = existing
       ? await prisma.user.update({
@@ -78,7 +87,8 @@ export async function signUpWithEmail(formData: FormData) {
             passwordHash,
             name: existing.name || displayName,
             role,
-            emailVerified: null,
+            emailVerified,
+            ...(emailDelivery ? {} : { lastLoginAt: new Date() }),
           },
         })
       : await prisma.user.create({
@@ -87,7 +97,8 @@ export async function signUpWithEmail(formData: FormData) {
             name: displayName,
             passwordHash,
             role,
-            emailVerified: null,
+            emailVerified,
+            ...(emailDelivery ? {} : { lastLoginAt: new Date() }),
           },
         });
 
@@ -107,6 +118,11 @@ export async function signUpWithEmail(formData: FormData) {
       update: { userId: user.id },
     });
 
+    if (!emailDelivery) {
+      await createAuthJsDatabaseSession(user.id);
+      redirect({ href: "/onboarding", locale });
+    }
+
     const rawToken = await createEmailVerificationToken(email);
     const verifyUrl = buildEmailVerifyUrl(email, rawToken);
     const sendResult = await sendSignupVerificationEmail({
@@ -115,22 +131,13 @@ export async function signUpWithEmail(formData: FormData) {
       verifyUrl,
     });
 
-    if (sendResult === "skipped_no_provider") {
-      throw new ActionError(
-        "Email delivery is not configured (RESEND_API_KEY). Cannot complete signup."
-      );
-    }
-    if (sendResult === "failed") {
+    if (sendResult === "failed" || sendResult === "skipped_no_provider") {
       throw new ActionError(
         "Could not send the confirmation email. Try again shortly."
       );
     }
 
-    // No session until email is verified
-    redirect({
-      href: `/auth?mode=login&verify=sent`,
-      locale: await getLocale(),
-    });
+    redirect({ href: `/auth?mode=login&verify=sent`, locale });
   });
 }
 
@@ -141,6 +148,7 @@ export async function signInWithEmail(formData: FormData) {
       .toLowerCase();
     const password = String(formData.get("password") ?? "");
     const hdrs = await headers();
+    const emailDelivery = isEmailDeliveryConfigured();
 
     if (!email || !password) {
       throw new ActionError("Informe e-mail e senha.");
@@ -163,7 +171,7 @@ export async function signInWithEmail(formData: FormData) {
       throw new ActionError("E-mail ou senha incorretos.");
     }
 
-    if (!user.emailVerified) {
+    if (emailDelivery && !user.emailVerified) {
       const rawToken = await createEmailVerificationToken(email);
       const verifyUrl = buildEmailVerifyUrl(email, rawToken);
       await sendSignupVerificationEmail({
@@ -176,10 +184,18 @@ export async function signInWithEmail(formData: FormData) {
       );
     }
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
+    // Contas antigas sem emailVerified e sem Resend: libera o login
+    if (!emailDelivery && !user.emailVerified) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: new Date(), lastLoginAt: new Date() },
+      });
+    } else {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { lastLoginAt: new Date() },
+      });
+    }
 
     await createAuthJsDatabaseSession(user.id);
     redirect({ href: "/for-you", locale: await getLocale() });

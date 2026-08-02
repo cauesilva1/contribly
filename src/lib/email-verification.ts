@@ -58,6 +58,10 @@ export function buildEmailVerifyUrl(email: string, rawToken: string) {
   return url.toString();
 }
 
+export function isEmailDeliveryConfigured() {
+  return Boolean(process.env.RESEND_API_KEY?.trim());
+}
+
 export async function sendSignupVerificationEmail(input: {
   to: string;
   name: string;
@@ -68,11 +72,6 @@ export async function sendSignupVerificationEmail(input: {
     process.env.EMAIL_FROM?.trim() || "Contribly <onboarding@resend.dev>";
 
   if (!apiKey) {
-    // Dev fallback: log link so local signup still works without Resend
-    if (process.env.NODE_ENV !== "production") {
-      console.info(`[dev] Email verify link for ${input.to}: ${input.verifyUrl}`);
-      return "sent";
-    }
     return "skipped_no_provider";
   }
 

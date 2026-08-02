@@ -1,9 +1,11 @@
 # Configurar e-mail (Resend) — Contribly
 
-O app usa a API do [Resend](https://resend.com) para:
+**Opcional.** Sem Resend o app funciona: signup por e-mail entra direto, e o aviso de interesse ao mantenedor fica só in-app (issue GitHub / link de convite).
+
+Se quiser e-mail transacional no futuro, use a API do [Resend](https://resend.com) para:
 
 1. Avisar o mantenedor quando alguém demonstra **interesse**
-2. Enviar o **link de confirmação** no signup por e-mail (ver também [AUTH_EMAIL.md](./AUTH_EMAIL.md))
+2. Enviar o **link de confirmação** no signup (ver [AUTH_EMAIL.md](./AUTH_EMAIL.md))
 
 Variáveis:
 

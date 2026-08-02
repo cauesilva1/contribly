@@ -20,7 +20,7 @@ Use esta lista quando for publicar / validar na Vercel.
 - [x] `GITHUB_TOKEN` — (recomendado) sync de issues/perfil
 - [x] `CRON_SECRET` — protege `/api/cron/sync-issues`
 - [ ] `TOKEN_ENCRYPTION_KEY` — `openssl rand -base64 32` (32 bytes; cifra tokens GitHub em repouso)
-- [ ] `RESEND_API_KEY` (+ `EMAIL_FROM`) — obrigatório em produção para signup por e-mail
+- [ ] `RESEND_API_KEY` (+ `EMAIL_FROM`) — **opcional**; só se for usar e-mail (confirmação / interesse)
 
 ## Rotação de segredos (se `.env` / chaves vazaram)
 
@@ -47,7 +47,6 @@ Faça **antes** de confiar no ambiente de novo:
 - [x] Nome demo “OpenMatch Maintainer” → “Contribly Maintainer”
 - [x] English-only UI live (`lang=en`, `/pt` → `/`) — smoke ago/2026
 - [ ] Set `ADMIN_EMAIL` or `ADMIN_GITHUB` on Vercel for `/metrics`
-- [ ] Signup e-mail → confirmação Resend → login
 
 ## Observações
 

@@ -62,7 +62,7 @@
     "loginTitle": "Log in",
     "signupTitle": "Join",
     "loginHint": "GitHub or email and password.",
-    "signupHint": "Create an account with email and password (we’ll email a confirmation link), or GitHub.",
+    "signupHint": "Create an account with email and password, or GitHub.",
     "continueGithub": "Continue with GitHub",
     "name": "Name",
     "namePlaceholder": "Your name",
