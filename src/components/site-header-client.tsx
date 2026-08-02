@@ -45,6 +45,14 @@ export function SiteHeaderClient({
           </Link>
 
           <nav className="hidden items-center gap-5 text-sm text-[#57606a] md:flex">
+            {!user ? (
+              <Link
+                href="/discover"
+                className="cursor-pointer rounded-md px-1 py-0.5 transition-colors hover:text-[#0d1117]"
+              >
+                {t("discover")}
+              </Link>
+            ) : null}
             {user &&
               linkKeys.map((link) => (
                 <Link

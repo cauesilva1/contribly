@@ -268,7 +268,14 @@
     "saveProfile": "Save profile",
     "nothingToSave": "Nothing new to save.",
     "profileSaved": "Profile saved.",
-    "saveError": "Couldn't save your profile"
+    "saveError": "Couldn't save your profile",
+    "emailHintFilledNoGithub": "Used for contact and future notifications.",
+    "emailHintEmptyNoGithub": "Add an email so maintainers can reach you.",
+    "bioPlaceholderDesigner": "E.g.: product design, design systems, accessibility",
+    "bioPlaceholderDocs": "E.g.: technical writing, tutorials, API docs",
+    "languagesLabelOptional": "Skills (optional if you add interests)",
+    "languagesOrInterestsHint": "Add skills and/or interest tags — at least one is required.",
+    "interestTagsLabelEmphasized": "Interests / focus (recommended)"
   },
   "newProject": {
     "eyebrow": "Publish",
@@ -333,21 +340,23 @@
   "skillAutocomplete": {
     "defaultPlaceholder": "Start typing…",
     "addingPlaceholder": "Add…",
-    "addOption": "Add \u201c{query}\u201d",
+    "addOption": "Add “{query}”",
     "removeLabel": "Remove {value}"
   },
   "discover": {
-    "title": "Discover projects",
-    "subtitle": "Filter by language (e.g.: typescript) or search by title, description, and tags. With a complete profile, the list is ranked by your match score.",
-    "searchLabel": "Search",
-    "searchPlaceholder": "e.g.: docs, cli, nextjs",
+    "title": "Find projects",
+    "subtitle": "Search by project name, then open details or join to show interest. Optional language filter.",
+    "searchLabel": "Project name",
+    "searchPlaceholder": "e.g.: react, docs bot, my-repo",
     "languageLabel": "Language",
     "languagePlaceholder": "TypeScript",
-    "filter": "Filter",
+    "filter": "Search",
     "emptyFilteredTitle": "Nothing here",
     "emptyFilteredDescription": "No project matches these filters. Try another language or clear the search.",
     "emptyTitle": "No projects yet",
-    "emptyDescription": "Be the first: publish a project or import a GitHub repository."
+    "emptyDescription": "Be the first: publish a project or import a GitHub repository.",
+    "joinToParticipate": "Join to participate",
+    "resultsFor": "{count} result(s) for “{query}”"
   },
   "forYou": {
     "eyebrow": "Recommendations",
@@ -402,14 +411,18 @@
   "onboarding": {
     "step": "Step 1 of 1",
     "title": "Set up your profile",
-    "description": "If GitHub already filled in your languages, review and continue. Otherwise, sync or edit manually."
+    "description": "If GitHub already filled in your languages, review and continue. Otherwise, sync or edit manually.",
+    "descriptionNoGithub": "Add the skills or interests you want to contribute with — design, docs, community, or code. No GitHub sync needed.",
+    "descriptionDesigner": "Tell us your design focus (UX, UI, design systems…). Interests help maintainers find you.",
+    "descriptionDocs": "Add topics you like to write about (docs, tutorials, API…). Skills are optional."
   },
   "profile": {
     "eyebrow": "Account",
     "title": "Your profile",
     "description": "We try to fill this in from GitHub at login. Use sync to update it anytime.",
     "dangerZoneTitle": "Danger zone",
-    "dangerZoneDescription": "Deleting your account removes your data from Contribly (right to erasure). Projects you published are also removed. Details in <privacyLink>Privacy</privacyLink>."
+    "dangerZoneDescription": "Deleting your account removes your data from Contribly (right to erasure). Projects you published are also removed. Details in <privacyLink>Privacy</privacyLink>.",
+    "descriptionNoGithub": "Update your contact email, skills, and interests anytime."
   },
   "errors": {
     "label": "Error",
@@ -442,7 +455,8 @@
     "syncDate": "synced {date}",
     "by": "by {name}",
     "viewDetails": "View details",
-    "github": "GitHub"
+    "github": "GitHub",
+    "wantToJoin": "I want to join"
   },
   "userMenu": {
     "profile": "Profile",
@@ -464,5 +478,17 @@
     "inviteAccepted": "Invite accepted",
     "inviteRejected": "Invite declined",
     "respondFailed": "Failed to respond"
+  },
+  "metrics": {
+    "eyebrow": "Internal",
+    "title": "Platform metrics",
+    "subtitle": "Signups, interest swipes, and matches. Visible only to ADMIN_EMAIL / ADMIN_GITHUB.",
+    "signups": "Signups",
+    "signups7d": "Signups (7 days)",
+    "projects": "Projects",
+    "swipes": "Interest swipes",
+    "pending": "Pending interests",
+    "matches": "Matches (accepted)",
+    "participations": "Participations"
   }
 }

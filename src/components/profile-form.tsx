@@ -20,6 +20,8 @@ type ProfileFormProps = {
   experienceLevel: string;
   openToInvites: boolean;
   fromOnboarding?: boolean;
+  hasGithub?: boolean;
+  role?: string;
 };
 
 export function ProfileForm({
@@ -31,6 +33,8 @@ export function ProfileForm({
   experienceLevel,
   openToInvites,
   fromOnboarding = false,
+  hasGithub = true,
+  role = "developer",
 }: ProfileFormProps) {
   const t = useTranslations("profileForm");
   const [dirty, setDirty] = useState(false);
@@ -90,7 +94,13 @@ export function ProfileForm({
           onChange={markDirty}
         />
         <p className="mt-1 text-xs text-[#57606a]">
-          {email ? t("emailHintFilled") : t("emailHintEmpty")}
+          {email
+            ? hasGithub
+              ? t("emailHintFilled")
+              : t("emailHintFilledNoGithub")
+            : hasGithub
+              ? t("emailHintEmpty")
+              : t("emailHintEmptyNoGithub")}
         </p>
       </div>
 
@@ -106,7 +116,11 @@ export function ProfileForm({
           defaultValue={bio}
           placeholder={
             fromOnboarding
-              ? t("bioPlaceholderOnboarding")
+              ? role === "designer"
+                ? t("bioPlaceholderDesigner")
+                : role === "docs"
+                  ? t("bioPlaceholderDocs")
+                  : t("bioPlaceholderOnboarding")
               : t("bioPlaceholderDefault")
           }
           onChange={markDirty}
@@ -116,19 +130,27 @@ export function ProfileForm({
       <SkillAutocomplete
         id="languages"
         name="languages"
-        label={t("languagesLabel")}
-        required
+        label={
+          role === "developer" || hasGithub
+            ? t("languagesLabel")
+            : t("languagesLabelOptional")
+        }
+        required={false}
         defaultValue={languages}
         placeholder={t("languagesPlaceholder")}
         suggestions={LANGUAGE_SUGGESTIONS}
-        hint={t("languagesHint")}
+        hint={t("languagesOrInterestsHint")}
         onDirty={markDirty}
       />
 
       <SkillAutocomplete
         id="interestTags"
         name="interestTags"
-        label={t("interestTagsLabel")}
+        label={
+          role === "designer" || role === "docs"
+            ? t("interestTagsLabelEmphasized")
+            : t("interestTagsLabel")
+        }
         defaultValue={interestTags}
         placeholder={t("interestTagsPlaceholder")}
         suggestions={INTEREST_TAG_SUGGESTIONS}

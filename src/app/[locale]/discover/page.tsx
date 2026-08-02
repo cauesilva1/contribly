@@ -2,7 +2,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { listProjects } from "@/app/actions";
 import { EmptyState } from "@/components/empty-state";
 import { ProjectCard } from "@/components/project-card";
-import { requireUser } from "@/lib/session";
+import { Button } from "@/components/ui/button";
+import { Link } from "@/i18n/navigation";
+import { getOptionalUser } from "@/lib/session";
 
 type Props = {
   params: Promise<{ locale: string }>;
@@ -15,7 +17,7 @@ export default async function DiscoverPage({ params, searchParams }: Props) {
   const t = await getTranslations("discover");
   const tCommon = await getTranslations("common");
 
-  await requireUser();
+  const user = await getOptionalUser();
   const query = await searchParams;
   const projects = await listProjects({
     q: query.q,
@@ -24,12 +26,22 @@ export default async function DiscoverPage({ params, searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
-      <div className="mb-4">
-        <h1 className="font-display text-3xl text-[#0d1117]">{t("title")}</h1>
-        <p className="mt-2 text-[#57606a]">{t("subtitle")}</p>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl text-[#0d1117]">{t("title")}</h1>
+          <p className="mt-2 max-w-2xl text-[#57606a]">{t("subtitle")}</p>
+        </div>
+        {!user ? (
+          <Button asChild variant="primary" size="sm">
+            <Link href="/auth">{t("joinToParticipate")}</Link>
+          </Button>
+        ) : null}
       </div>
 
-      <form className="mb-4 grid gap-3 rounded-xl border border-[#d0d7de] bg-white/90 p-4 shadow-[0_12px_30px_rgba(13,17,23,0.04)] md:grid-cols-[1fr_200px_auto]">
+      <form
+        className="mb-4 grid gap-3 rounded-xl border border-[#d0d7de] bg-white/90 p-4 shadow-[0_12px_30px_rgba(13,17,23,0.04)] md:grid-cols-[1fr_200px_auto]"
+        method="get"
+      >
         <div>
           <label htmlFor="q">{t("searchLabel")}</label>
           <input
@@ -37,6 +49,7 @@ export default async function DiscoverPage({ params, searchParams }: Props) {
             name="q"
             defaultValue={query.q ?? ""}
             placeholder={t("searchPlaceholder")}
+            autoFocus={Boolean(query.q)}
           />
         </div>
         <div>
@@ -58,6 +71,12 @@ export default async function DiscoverPage({ params, searchParams }: Props) {
         </div>
       </form>
 
+      {query.q ? (
+        <p className="mb-3 text-sm text-[#57606a]">
+          {t("resultsFor", { query: query.q, count: projects.length })}
+        </p>
+      ) : null}
+
       {projects.length === 0 ? (
         <EmptyState
           title={
@@ -70,8 +89,8 @@ export default async function DiscoverPage({ params, searchParams }: Props) {
               ? t("emptyFilteredDescription")
               : t("emptyDescription")
           }
-          actionLabel={tCommon("publishProject")}
-          actionHref="/projects/new"
+          actionLabel={user ? tCommon("publishProject") : t("joinToParticipate")}
+          actionHref={user ? "/projects/new" : "/auth"}
         />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -89,6 +108,7 @@ export default async function DiscoverPage({ params, searchParams }: Props) {
               starsCount={project.starsCount}
               issuesCount={project._count.issues}
               issuesSyncedAt={project.issuesSyncedAt}
+              showJoinCta={!user}
             />
           ))}
         </div>

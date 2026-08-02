@@ -10,23 +10,35 @@ const csvToList = (value: unknown) => {
     .filter(Boolean);
 };
 
-export const profileSchema = z.object({
-  email: z.preprocess(
-    (value) => {
-      if (typeof value !== "string") return undefined;
-      const trimmed = value.trim();
-      return trimmed === "" ? undefined : trimmed;
-    },
-    z.string().email("Informe um e-mail válido.").optional()
-  ),
-  bio: z.string().trim().max(1000).optional().default(""),
-  languages: z
-    .preprocess(csvToList, z.array(z.string().min(1)).min(1, "Informe pelo menos uma linguagem.")),
-  interestTags: z.preprocess(csvToList, z.array(z.string().min(1)).default([])),
-  experienceLevel: z.enum(["beginner", "intermediate", "advanced"]).default("beginner"),
-  openToInvites: z.boolean().default(true),
-  fromOnboarding: z.boolean().default(false),
-});
+export const profileSchema = z
+  .object({
+    email: z.preprocess(
+      (value) => {
+        if (typeof value !== "string") return undefined;
+        const trimmed = value.trim();
+        return trimmed === "" ? undefined : trimmed;
+      },
+      z.string().email("Informe um e-mail válido.").optional()
+    ),
+    bio: z.string().trim().max(1000).optional().default(""),
+    languages: z.preprocess(csvToList, z.array(z.string().min(1)).default([])),
+    interestTags: z.preprocess(csvToList, z.array(z.string().min(1)).default([])),
+    experienceLevel: z
+      .enum(["beginner", "intermediate", "advanced"])
+      .default("beginner"),
+    openToInvites: z.boolean().default(true),
+    fromOnboarding: z.boolean().default(false),
+  })
+  .superRefine((data, ctx) => {
+    if (data.languages.length === 0 && data.interestTags.length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["languages"],
+        message:
+          "Add at least one skill/language or an interest tag to continue.",
+      });
+    }
+  });
 
 export const projectSchema = z.object({
   title: z.string().trim().min(3, "Título muito curto.").max(120),

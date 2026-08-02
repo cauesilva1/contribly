@@ -268,7 +268,14 @@
     "saveProfile": "Salvar perfil",
     "nothingToSave": "Nada novo para salvar.",
     "profileSaved": "Perfil salvo.",
-    "saveError": "Não foi possível salvar o perfil"
+    "saveError": "Não foi possível salvar o perfil",
+    "emailHintFilledNoGithub": "Usado para contato e futuras notificações.",
+    "emailHintEmptyNoGithub": "Adicione um e-mail para mantenedores falarem com você.",
+    "bioPlaceholderDesigner": "Ex.: product design, design systems, acessibilidade",
+    "bioPlaceholderDocs": "Ex.: escrita técnica, tutoriais, docs de API",
+    "languagesLabelOptional": "Skills (opcional se tiver interesses)",
+    "languagesOrInterestsHint": "Adicione skills e/ou tags de interesse — pelo menos um é obrigatório.",
+    "interestTagsLabelEmphasized": "Interesses / foco (recomendado)"
   },
   "newProject": {
     "eyebrow": "Publicar",
@@ -333,21 +340,23 @@
   "skillAutocomplete": {
     "defaultPlaceholder": "Comece a digitar…",
     "addingPlaceholder": "Adicionar…",
-    "addOption": "Adicionar \u201c{query}\u201d",
+    "addOption": "Adicionar “{query}”",
     "removeLabel": "Remover {value}"
   },
   "discover": {
-    "title": "Descobrir projetos",
-    "subtitle": "Filtre por linguagem (ex.: typescript) ou busque por título, descrição e tags. Com perfil preenchido, a lista prioriza o seu match score.",
-    "searchLabel": "Busca",
-    "searchPlaceholder": "ex: docs, cli, nextjs",
+    "title": "Encontrar projetos",
+    "subtitle": "Busque pelo nome do projeto, abra os detalhes ou entre para demonstrar interesse. Filtro de linguagem opcional.",
+    "searchLabel": "Nome do projeto",
+    "searchPlaceholder": "ex.: react, docs bot, meu-repo",
     "languageLabel": "Linguagem",
     "languagePlaceholder": "TypeScript",
-    "filter": "Filtrar",
+    "filter": "Buscar",
     "emptyFilteredTitle": "Nada por aqui",
     "emptyFilteredDescription": "Nenhum projeto bate com esses filtros. Tente outra linguagem ou limpe a busca.",
     "emptyTitle": "Ainda sem projetos",
-    "emptyDescription": "Seja o primeiro: publique um projeto ou importe um repositório do GitHub."
+    "emptyDescription": "Seja o primeiro: publique um projeto ou importe um repositório do GitHub.",
+    "joinToParticipate": "Entrar para participar",
+    "resultsFor": "{count} resultado(s) para “{query}”"
   },
   "forYou": {
     "eyebrow": "Recomendações",
@@ -402,14 +411,18 @@
   "onboarding": {
     "step": "Passo 1 de 1",
     "title": "Monte seu perfil",
-    "description": "Se o GitHub já preencheu suas linguagens, revise e continue. Caso contrário, sincronize ou edite manualmente."
+    "description": "Se o GitHub já preencheu suas linguagens, revise e continue. Caso contrário, sincronize ou edite manualmente.",
+    "descriptionNoGithub": "Adicione skills ou interesses com os quais quer contribuir — design, docs, community ou código. Sem sync do GitHub.",
+    "descriptionDesigner": "Conte seu foco de design (UX, UI, design systems…). Interesses ajudam mantenedores a te encontrar.",
+    "descriptionDocs": "Adicione temas que gosta de escrever (docs, tutoriais, API…). Skills são opcionais."
   },
   "profile": {
     "eyebrow": "Conta",
     "title": "Seu perfil",
     "description": "No login a gente tenta preencher com o GitHub. Use o sync para atualizar a qualquer momento.",
     "dangerZoneTitle": "Zona de risco",
-    "dangerZoneDescription": "Excluir a conta remove seus dados do Contribly (LGPD / direito de apagar). Projetos que você publicou também saem. Detalhes em <privacyLink>Privacidade</privacyLink>."
+    "dangerZoneDescription": "Excluir a conta remove seus dados do Contribly (LGPD / direito de apagar). Projetos que você publicou também saem. Detalhes em <privacyLink>Privacidade</privacyLink>.",
+    "descriptionNoGithub": "Atualize e-mail, skills e interesses quando quiser."
   },
   "errors": {
     "label": "Erro",
@@ -442,7 +455,8 @@
     "syncDate": "sync {date}",
     "by": "por {name}",
     "viewDetails": "Ver detalhes",
-    "github": "GitHub"
+    "github": "GitHub",
+    "wantToJoin": "Quero participar"
   },
   "userMenu": {
     "profile": "Perfil",
@@ -464,5 +478,17 @@
     "inviteAccepted": "Convite aceito",
     "inviteRejected": "Convite recusado",
     "respondFailed": "Falha ao responder"
+  },
+  "metrics": {
+    "eyebrow": "Interno",
+    "title": "Métricas da plataforma",
+    "subtitle": "Cadastros, swipes de interesse e matches. Visível só para ADMIN_EMAIL / ADMIN_GITHUB.",
+    "signups": "Cadastros",
+    "signups7d": "Cadastros (7 dias)",
+    "projects": "Projetos",
+    "swipes": "Swipes de interesse",
+    "pending": "Interesses pendentes",
+    "matches": "Matches (aceitos)",
+    "participations": "Participações"
   }
 }

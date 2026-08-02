@@ -13,6 +13,7 @@ type ProjectCardProps = {
   starsCount?: number | null;
   issuesCount?: number;
   issuesSyncedAt?: Date | string | null;
+  showJoinCta?: boolean;
 };
 
 function formatStars(count: number) {
@@ -32,6 +33,7 @@ export async function ProjectCard({
   starsCount,
   issuesCount,
   issuesSyncedAt,
+  showJoinCta = false,
 }: ProjectCardProps) {
   const t = await getTranslations("projectCard");
 
@@ -42,7 +44,7 @@ export async function ProjectCard({
     const ageDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
     if (ageDays < 1) return t("syncToday");
     if (ageDays < 7) return t("syncDaysAgo", { days: Math.floor(ageDays) });
-    return t("syncDate", { date: date.toLocaleDateString("pt-BR") });
+    return t("syncDate", { date: date.toLocaleDateString("en-US") });
   }
 
   const syncLabel = formatSync(issuesSyncedAt);
@@ -103,13 +105,21 @@ export async function ProjectCard({
       {ownerName && (
         <p className="mt-2 text-xs text-[#57606a]">{t("by", { name: ownerName })}</p>
       )}
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex flex-wrap gap-2">
         <Link
           href={`/projects/${id}`}
           className="cursor-pointer rounded-md bg-[#24292f] px-3 py-1.5 text-xs text-white transition-colors hover:bg-[#1b1f23]"
         >
           {t("viewDetails")}
         </Link>
+        {showJoinCta ? (
+          <Link
+            href="/auth"
+            className="cursor-pointer rounded-md border border-[#0969da] bg-[#ddf4ff] px-3 py-1.5 text-xs text-[#0969da] transition-colors hover:bg-[#b6e3ff]"
+          >
+            {t("wantToJoin")}
+          </Link>
+        ) : null}
         <a
           href={githubLink}
           target="_blank"

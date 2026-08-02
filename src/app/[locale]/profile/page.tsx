@@ -27,9 +27,11 @@ export default async function ProfilePage({ params }: Props) {
           <h1 className="mt-2 font-display text-3xl text-[#0d1117]">
             {t("title")}
           </h1>
-          <p className="mt-2 text-[#57606a]">{t("description")}</p>
+          <p className="mt-2 text-[#57606a]">
+            {user.githubId ? t("description") : t("descriptionNoGithub")}
+          </p>
         </div>
-        <SyncGithubProfileButton />
+        {user.githubId ? <SyncGithubProfileButton /> : null}
       </div>
 
       <div className="surface-card mt-4 p-5">
@@ -63,6 +65,8 @@ export default async function ProfilePage({ params }: Props) {
           interestTags={user.interestTags.join(", ")}
           experienceLevel={user.experienceLevel}
           openToInvites={user.openToInvites}
+          hasGithub={Boolean(user.githubId)}
+          role={user.role}
         />
       </div>
 

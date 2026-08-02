@@ -5,7 +5,6 @@ import { routing } from "@/i18n/routing";
 const intlMiddleware = createMiddleware(routing);
 
 const protectedPrefixes = [
-  "/discover",
   "/swipe",
   "/for-you",
   "/projects/new",
@@ -14,6 +13,7 @@ const protectedPrefixes = [
   "/onboarding",
   "/dashboard",
   "/matches",
+  "/metrics",
 ];
 
 function hasSessionCookie(req: NextRequest) {

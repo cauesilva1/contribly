@@ -202,14 +202,25 @@ export async function listProjects(filters: ProjectFilters = {}) {
     : projects;
 
   if (!user) {
-    return filtered.map((project) => ({
-      ...project,
-      score: undefined as number | undefined,
-      issueLabels: collectIssueLabels(project.issues),
-    }));
+    const needle = q?.toLowerCase() ?? "";
+    return filtered
+      .map((project) => ({
+        ...project,
+        score: undefined as number | undefined,
+        issueLabels: collectIssueLabels(project.issues),
+        titleHit:
+          needle && project.title.toLowerCase().includes(needle) ? 1 : 0,
+      }))
+      .sort(
+        (a, b) =>
+          (b.titleHit ?? 0) - (a.titleHit ?? 0) ||
+          (b.starsCount ?? 0) - (a.starsCount ?? 0) ||
+          b.createdAt.getTime() - a.createdAt.getTime()
+      );
   }
 
   const history = await loadUserMatchHistory(user.id);
+  const needle = q?.toLowerCase() ?? "";
 
   return filtered
     .map((project) => {
@@ -228,15 +239,20 @@ export async function listProjects(filters: ProjectFilters = {}) {
         project.id
       );
 
+      const titleHit =
+        needle && project.title.toLowerCase().includes(needle) ? 1 : 0;
+
       return {
         ...project,
         issueLabels,
         score: breakdown.score,
         breakdown,
+        titleHit,
       };
     })
     .sort(
       (a, b) =>
+        (b.titleHit ?? 0) - (a.titleHit ?? 0) ||
         (b.score ?? 0) - (a.score ?? 0) ||
         (b.starsCount ?? 0) - (a.starsCount ?? 0) ||
         b.createdAt.getTime() - a.createdAt.getTime()

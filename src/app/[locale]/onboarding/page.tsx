@@ -20,6 +20,17 @@ export default async function OnboardingPage({ params }: Props) {
     redirect({ href: "/for-you", locale });
   }
 
+  const hasGithub = Boolean(user.githubId);
+  const role = user.role;
+  const description =
+    !hasGithub && role === "designer"
+      ? t("descriptionDesigner")
+      : !hasGithub && role === "docs"
+        ? t("descriptionDocs")
+        : !hasGithub
+          ? t("descriptionNoGithub")
+          : t("description");
+
   return (
     <div className="mx-auto max-w-xl px-4 py-6">
       <p className="text-xs uppercase tracking-[0.25em] text-[#0969da]">
@@ -28,11 +39,13 @@ export default async function OnboardingPage({ params }: Props) {
       <h1 className="mt-3 font-display text-3xl text-[#0d1117]">
         {t("title")}
       </h1>
-      <p className="mt-2 text-[#57606a]">{t("description")}</p>
+      <p className="mt-2 text-[#57606a]">{description}</p>
 
-      <div className="mt-5">
-        <SyncGithubProfileButton />
-      </div>
+      {hasGithub ? (
+        <div className="mt-5">
+          <SyncGithubProfileButton />
+        </div>
+      ) : null}
 
       <div className="surface-card mt-4 p-5">
         <ProfileForm
@@ -44,6 +57,8 @@ export default async function OnboardingPage({ params }: Props) {
           experienceLevel={user.experienceLevel}
           openToInvites={user.openToInvites}
           fromOnboarding
+          hasGithub={hasGithub}
+          role={role}
         />
       </div>
     </div>
