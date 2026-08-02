@@ -33,7 +33,7 @@ export default async function HomePage() {
               </p>
             </div>
             <h1 className="mt-3 max-w-xl font-display text-5xl leading-[0.95] text-[#0d1117] sm:text-6xl">
-              OpenMatch
+              Contribly
             </h1>
             <p className="mt-4 max-w-md text-base text-[#57606a] md:text-lg">
               Encontre projetos para contribuir. Filtre, dê swipe e receba

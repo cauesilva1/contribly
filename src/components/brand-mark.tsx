@@ -5,7 +5,7 @@ type BrandMarkProps = {
 
 export function BrandMark({
   className = "h-7 w-7",
-  title = "OpenMatch",
+  title = "Contribly",
 }: BrandMarkProps) {
   return (
     <svg

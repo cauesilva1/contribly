@@ -83,7 +83,7 @@ export function WelcomeParty({ name }: WelcomePartyProps) {
           É festa, {name}!
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-[#57606a] sm:text-base">
-          Sua conta entrou no OpenMatch. Agora é hora de achar um repo que combine
+          Sua conta entrou no Contribly. Agora é hora de achar um repo que combine
           com você — sem enrolação, com swipe e convite.
         </p>
 

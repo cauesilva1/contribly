@@ -94,7 +94,7 @@ async function tokenLooksValid(accessToken: string) {
     headers: {
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${accessToken}`,
-      "User-Agent": "openmatch",
+      "User-Agent": "contribly",
     },
     next: { revalidate: 0 },
   });

@@ -36,7 +36,7 @@ export type GithubProfileInsight = {
 function githubHeaders(accessToken?: string | null) {
   return {
     Accept: "application/vnd.github+json",
-    "User-Agent": "openmatch",
+    "User-Agent": "contribly",
     ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     ...(process.env.GITHUB_TOKEN && !accessToken
       ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }

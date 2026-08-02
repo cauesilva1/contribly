@@ -42,7 +42,7 @@ export async function fetchGoodFirstIssues(githubLink: string) {
       {
         headers: {
           Accept: "application/vnd.github+json",
-          "User-Agent": "openmatch",
+          "User-Agent": "contribly",
           ...(process.env.GITHUB_TOKEN
             ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
             : {}),
@@ -71,7 +71,7 @@ export async function fetchGithubRepoMeta(githubLink: string) {
 
   const headers = {
     Accept: "application/vnd.github+json",
-    "User-Agent": "openmatch",
+    "User-Agent": "contribly",
     ...(process.env.GITHUB_TOKEN
       ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
       : {}),

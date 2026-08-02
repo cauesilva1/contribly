@@ -14,7 +14,7 @@ export async function fetchGithubPrimaryEmail(accessToken?: string | null) {
   const response = await fetchGithubWithRetry("https://api.github.com/user/emails", {
     headers: {
       Accept: "application/vnd.github+json",
-      "User-Agent": "openmatch",
+      "User-Agent": "contribly",
       Authorization: `Bearer ${accessToken}`,
     },
     next: { revalidate: 0 },

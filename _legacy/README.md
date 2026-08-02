@@ -1,6 +1,6 @@
 # Legacy apps
 
-Código anterior do OpenMatch, mantido só como referência:
+Código anterior (antes do rewrite unificado / marca Contribly), só referência:
 
 - `projetomatch-client` — Next.js front separado
 - `projetcmatch-back` — Express + Prisma

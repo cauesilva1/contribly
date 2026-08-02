@@ -1,4 +1,4 @@
-# OpenMatch
+# Contribly
 
 Plataforma open source para conectar **contribuidores** a projetos que precisam de ajuda — com filtros, swipe de interesse, aceite do mantenedor e convites.
 
@@ -34,6 +34,8 @@ git clone https://github.com/cauesilva1/openmatch.git
 cd openmatch
 npm install
 ```
+
+> App: [contribly.vercel.app](https://contribly.vercel.app) · marca: **Contribly** (o diretório/repo GitHub ainda pode se chamar `openmatch` até você renomear).
 
 2. Copie o ambiente:
 

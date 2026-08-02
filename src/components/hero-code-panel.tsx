@@ -1,5 +1,5 @@
 const LINES = [
-  { n: 1, parts: [{ c: "kw", t: "const" }, { c: "plain", t: " " }, { c: "fn", t: "match" }, { c: "plain", t: " = " }, { c: "kw", t: "await" }, { c: "plain", t: " " }, { c: "fn", t: "openMatch" }, { c: "plain", t: "({" }] },
+  { n: 1, parts: [{ c: "kw", t: "const" }, { c: "plain", t: " " }, { c: "fn", t: "match" }, { c: "plain", t: " = " }, { c: "kw", t: "await" }, { c: "plain", t: " " }, { c: "fn", t: "contribly" }, { c: "plain", t: "({" }] },
   { n: 2, parts: [{ c: "plain", t: "  languages: " }, { c: "str", t: '["TypeScript", "Go"]' }, { c: "plain", t: "," }] },
   { n: 3, parts: [{ c: "plain", t: "  tags: " }, { c: "str", t: '["docs", "good-first-issue"]' }, { c: "plain", t: "," }] },
   { n: 4, parts: [{ c: "plain", t: "  intent: " }, { c: "str", t: '"contribute"' }] },

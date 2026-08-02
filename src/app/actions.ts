@@ -386,7 +386,7 @@ export async function importGithubProject(formData: FormData) {
     const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
       headers: {
         Accept: "application/vnd.github+json",
-        "User-Agent": "openmatch",
+        "User-Agent": "contribly",
         ...(process.env.GITHUB_TOKEN
           ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
           : {}),

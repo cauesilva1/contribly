@@ -59,7 +59,7 @@ type GithubIssue = {
 function githubHeaders() {
   return {
     Accept: "application/vnd.github+json",
-    "User-Agent": "openmatch-seed",
+    "User-Agent": "contribly-seed",
     ...(process.env.GITHUB_TOKEN
       ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
       : {}),
@@ -117,33 +117,33 @@ function lookingForFrom(repo: GithubRepo, languages: string[]) {
 
 async function main() {
   const maintainer = await prisma.user.upsert({
-    where: { email: "maintainer@openmatch.demo" },
+    where: { email: "maintainer@contribly.demo" },
     update: {
-      name: "OpenMatch Maintainer",
-      githubUsername: "openmatch-demo",
+      name: "Contribly Maintainer",
+      githubUsername: "contribly-demo",
       languages: ["TypeScript", "Python", "Go", "Rust"],
       interestTags: ["docs", "good-first-issue", "cli", "frontend"],
       experienceLevel: "advanced",
       openToInvites: false,
-      bio: "Conta demo de mantenedor para o OpenMatch.",
+      bio: "Conta demo de mantenedor para o Contribly.",
     },
     create: {
-      email: "maintainer@openmatch.demo",
-      name: "OpenMatch Maintainer",
-      githubUsername: "openmatch-demo",
+      email: "maintainer@contribly.demo",
+      name: "Contribly Maintainer",
+      githubUsername: "contribly-demo",
       languages: ["TypeScript", "Python", "Go", "Rust"],
       interestTags: ["docs", "good-first-issue", "cli", "frontend"],
       experienceLevel: "advanced",
       openToInvites: false,
-      bio: "Conta demo de mantenedor para o OpenMatch.",
+      bio: "Conta demo de mantenedor para o Contribly.",
     },
   });
 
   await prisma.user.upsert({
-    where: { email: "contributor@openmatch.demo" },
+    where: { email: "contributor@contribly.demo" },
     update: {
       name: "Demo Contributor",
-      githubUsername: "openmatch-contributor",
+      githubUsername: "contribly-contributor",
       languages: ["TypeScript", "JavaScript", "Python"],
       interestTags: ["docs", "frontend", "nextjs", "good-first-issue"],
       experienceLevel: "beginner",
@@ -151,9 +151,9 @@ async function main() {
       bio: "Contribuidor demo aberto a convites.",
     },
     create: {
-      email: "contributor@openmatch.demo",
+      email: "contributor@contribly.demo",
       name: "Demo Contributor",
-      githubUsername: "openmatch-contributor",
+      githubUsername: "contribly-contributor",
       languages: ["TypeScript", "JavaScript", "Python"],
       interestTags: ["docs", "frontend", "nextjs", "good-first-issue"],
       experienceLevel: "beginner",
@@ -259,7 +259,7 @@ async function main() {
   console.log("Seed OK");
   console.log(`Projetos novos: ${created} · pulados/falha: ${skipped}`);
   console.log(`Total de projetos no banco: ${total}`);
-  console.log("Maintainer demo: maintainer@openmatch.demo");
+  console.log("Maintainer demo: maintainer@contribly.demo");
 }
 
 main()

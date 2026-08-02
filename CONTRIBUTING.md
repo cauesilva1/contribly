@@ -1,6 +1,6 @@
-# Contributing to OpenMatch
+# Contributing to Contribly
 
-Thanks for helping improve OpenMatch.
+Thanks for helping improve Contribly.
 
 ## Local development
 

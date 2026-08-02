@@ -19,24 +19,24 @@ const sans = Source_Sans_3({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.AUTH_URL ?? "http://localhost:3000"),
   title: {
-    default: "OpenMatch",
-    template: "%s · OpenMatch",
+    default: "Contribly",
+    template: "%s · Contribly",
   },
   description:
     "Conecte desenvolvedores a projetos open source com filtros, swipe e convites.",
-  applicationName: "OpenMatch",
+  applicationName: "Contribly",
   openGraph: {
-    title: "OpenMatch",
+    title: "Contribly",
     description:
-      "Matchmaking open source: descubra projetos, dê swipe e receba convites.",
+      "Descubra projetos open source, dê swipe e receba convites de mantenedores.",
     type: "website",
     locale: "pt_BR",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OpenMatch",
+    title: "Contribly",
     description:
-      "Matchmaking open source: descubra projetos, dê swipe e receba convites.",
+      "Descubra projetos open source, dê swipe e receba convites de mantenedores.",
   },
 };
 

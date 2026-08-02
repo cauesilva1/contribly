@@ -30,7 +30,7 @@ export async function SiteHeader() {
             className="flex items-center gap-2.5 text-[#0d1117] transition-opacity hover:opacity-80"
           >
             <BrandMark className="h-7 w-7 text-[#0969da]" />
-            <span className="font-display text-2xl tracking-tight">OpenMatch</span>
+            <span className="font-display text-2xl tracking-tight">Contribly</span>
           </Link>
 
           <nav className="hidden items-center gap-5 text-sm text-[#57606a] md:flex">

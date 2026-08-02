@@ -5,8 +5,8 @@ Use esta lista quando for publicar na Vercel.
 ## GitHub OAuth App
 
 - [ ] Criar/atualizar OAuth App de produção
-- [ ] Homepage URL = domínio da Vercel (ex.: `https://openmatch.vercel.app`)
-- [ ] Callback URL = `https://SEU_DOMINIO/api/auth/callback/github`
+- [ ] Homepage URL = domínio da Vercel (ex.: `https://contribly.vercel.app`)
+- [ ] Callback URL = `https://contribly.vercel.app/api/auth/callback/github`
 - [ ] Copiar Client ID / Secret para a Vercel
 
 ## Variáveis na Vercel

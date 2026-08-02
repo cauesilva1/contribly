@@ -125,7 +125,7 @@ export default async function ProfilePage() {
       <div className="surface-card mt-4 p-5">
         <h2 className="font-display text-xl text-[#0d1117]">Zona de risco</h2>
         <p className="mt-1 text-sm text-[#57606a]">
-          Excluir a conta remove seus dados do OpenMatch (LGPD / direito de
+          Excluir a conta remove seus dados do Contribly (LGPD / direito de
           apagar). Projetos que você publicou também saem.
         </p>
         <div className="mt-4">
