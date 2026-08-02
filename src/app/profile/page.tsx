@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { DeleteAccountButton } from "@/components/delete-account-button";
 import { ProfileForm } from "@/components/profile-form";
@@ -62,7 +63,11 @@ export default async function ProfilePage() {
         <h2 className="font-display text-xl text-[#0d1117]">Zona de risco</h2>
         <p className="mt-1 text-sm text-[#57606a]">
           Excluir a conta remove seus dados do Contribly (LGPD / direito de
-          apagar). Projetos que você publicou também saem.
+          apagar). Projetos que você publicou também saem. Detalhes em{" "}
+          <Link href="/privacy" className="text-[#0969da] hover:underline">
+            Privacidade
+          </Link>
+          .
         </p>
         <div className="mt-4">
           <DeleteAccountButton />

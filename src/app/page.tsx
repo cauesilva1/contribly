@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/empty-state";
 import { GithubIcon } from "@/components/github-icon";
 import { HeroCodePanel } from "@/components/hero-code-panel";
 import { ProjectCard } from "@/components/project-card";
+import { SiteFooter } from "@/components/site-footer";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/session";
 
@@ -125,6 +126,8 @@ export default async function HomePage() {
           )}
         </section>
       </div>
+
+      <SiteFooter />
     </div>
   );
 }
