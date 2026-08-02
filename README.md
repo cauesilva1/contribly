@@ -1,64 +1,97 @@
 # OpenMatch
 
-OpenMatch is an open-source matchmaking platform that connects developers to open-source projects based on their skills, interests, and availability.
+Plataforma open source para conectar **contribuidores** a projetos que precisam de ajuda — com filtros, swipe de interesse, aceite do mantenedor e convites.
 
-## 🌟 Features
+## Stack
 
-- 🔐 GitHub login and authentication  
-- 🧠 Personalized project recommendations  
-- 📈 Project listing, filtering and search  
-- 🧑‍💻 Matchmaking algorithm (beta)  
-- 📬 Notifications and contact features  
+- Next.js 15 (App Router) — UI + Server Actions
+- Auth.js (GitHub OAuth)
+- Prisma + PostgreSQL ([Supabase](https://supabase.com))
+- Deploy na Vercel
 
-## 🚀 Tech Stack
+## Funcionalidades
 
-- Next.js 13+ (App Router)  
-- React, Tailwind CSS  
-- Node.js + Supabase (PostgreSQL)  
-- Prisma ORM  
-- TypeScript  
+### Fase 1 (MVP)
+- Login com GitHub e perfil (linguagens, bio, aberto a convites)
+- Onboarding pós-login
+- Publicar projeto manualmente ou importar por URL do GitHub
+- Descobrir com busca/filtros
+- Swipe (interesse / passar)
+- Inbox: interesses, convites e notificações in-app
 
----
+### Fase 3
+- Matchmaking mais rico (histórico de swipe, issues, experiência, tags de interesse)
+- Sync em lote de issues + rota cron (`/api/cron/sync-issues`)
+- Painel do mantenedor com analytics e candidatos sugeridos
+- Metadados extras do GitHub (stars, última sync)
 
-## 📦 Getting Started
+## Setup local
 
-First, clone the repository:
+1. Clone e instale:
 
 ```bash
 git clone https://github.com/cauesilva1/openmatch.git
 cd openmatch
+npm install
 ```
 
-### 👉 Run the Frontend (Next.js)
+2. Copie o ambiente:
 
 ```bash
-cd frontend
-npm install
+cp .env.example .env
+```
+
+Preencha:
+
+- `DATABASE_URL` — connection string **pooler** do seu projeto Supabase
+- `AUTH_SECRET` — `openssl rand -base64 32`
+- `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` — [GitHub OAuth App](https://github.com/settings/developers)  
+  Callback: `http://localhost:3000/api/auth/callback/github`
+
+3. Migre o banco:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+4. Rode:
+
+```bash
 npm run dev
 ```
 
-Visit `http://localhost:3000` to view the app.
+Abra [http://localhost:3000](http://localhost:3000).
 
-### 👉 Run the Backend (Node + Supabase)
+## Scripts
 
-In a new terminal:
+| Comando | Descrição |
+|---------|-----------|
+| `npm run dev` | Dev server |
+| `npm run build` | Build de produção |
+| `npm run start` | Servidor de produção |
+| `npm run db:migrate` | Prisma migrate |
+| `npm run db:seed` | Dados demo (projetos + issues) |
 
-```bash
-cd backend
-npm install
-npm run dev
+## Deploy
+
+Veja o checklist completo em [docs/PRODUCTION_CHECKLIST.md](./docs/PRODUCTION_CHECKLIST.md).
+
+Deploy fica por último (UI + Vercel).
+
+## Estrutura
+
+```
+src/app/           # páginas + server actions + auth route
+src/components/    # UI
+src/lib/           # prisma, session, utils
+prisma/            # schema
+_legacy/           # apps antigos (Express + Next separado) — referência
 ```
 
-Make sure your `.env` files are set up for both frontend and backend before running.
+## Contribuindo
 
----
+Veja [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-## 🤝 Contributing
+## License
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for how to get started.
-
----
-
-## 📄 License
-
-OpenMatch is open-sourced under the MIT license.
+MIT
