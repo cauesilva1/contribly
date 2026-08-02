@@ -13,8 +13,8 @@ export default async function ForYouPage() {
         </p>
         <h1 className="mt-2 font-display text-3xl text-[#0d1117]">Pra você</h1>
         <p className="mt-2 max-w-2xl text-[#57606a]">
-          Ranking com overlap de linguagens, tags de interesse, histórico de
-          swipes, good first issues e seu nível de experiência.
+          Ranking com linguagens, tags, histórico de swipes, labels de issues,
+          stars, frescor do sync e seu nível de experiência.
         </p>
       </div>
 
@@ -38,14 +38,19 @@ export default async function ForYouPage() {
                 githubLink={project.githubLink}
                 ownerName={project.owner.name}
                 score={project.score}
+                starsCount={project.starsCount}
+                issuesCount={project._count.issues}
+                issuesSyncedAt={project.issuesSyncedAt}
               />
               <p className="px-1 text-xs text-[#57606a]">
                 langs {project.breakdown.languageOverlap} · tags{" "}
-                {project.breakdown.tagOverlap} · lookingFor{" "}
-                {project.breakdown.lookingForOverlap} · histórico{" "}
+                {project.breakdown.tagOverlap} · looking{" "}
+                {project.breakdown.lookingForOverlap} · hist{" "}
                 {project.breakdown.historyBoost} · issues{" "}
-                {project.breakdown.issuesBoost} · exp{" "}
-                {project.breakdown.experienceBoost}
+                {project.breakdown.issuesBoost} · labels{" "}
+                {project.breakdown.labelOverlap} · stars{" "}
+                {project.breakdown.starsBoost} · sync{" "}
+                {project.breakdown.freshnessBoost}
               </p>
             </div>
           ))}

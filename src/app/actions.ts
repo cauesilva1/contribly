@@ -8,9 +8,14 @@ import {
   findExistingProjectByGithub,
   normalizeGithubRepoUrl,
 } from "@/lib/github-url";
-import { rankCandidatesForProject, scoreProjectForUser } from "@/lib/matching";
+import {
+  collectIssueLabels,
+  rankCandidatesForProject,
+  scoreProjectForUser,
+  type ScoreHistoryInput,
+} from "@/lib/matching";
 import { prisma } from "@/lib/prisma";
-import { getSession, requireUser } from "@/lib/session";
+import { getOptionalUser, getSession, requireUser } from "@/lib/session";
 import {
   importGithubSchema,
   inviteSchema,
@@ -106,11 +111,56 @@ export type ProjectFilters = {
   q?: string;
 };
 
+async function loadUserMatchHistory(userId: string): Promise<ScoreHistoryInput> {
+  const history = await prisma.matchInterest.findMany({
+    where: { userId },
+    include: {
+      project: {
+        select: { id: true, tags: true, lookingFor: true },
+      },
+    },
+  });
+
+  const liked = history.filter(
+    (item) => item.status === "pending" || item.status === "accepted"
+  );
+  const rejected = history.filter((item) => item.status === "rejected");
+
+  return {
+    likedTags: liked.flatMap((item) => item.project.tags),
+    likedLookingFor: liked.flatMap((item) => item.project.lookingFor),
+    rejectedProjectIds: new Set(rejected.map((item) => item.projectId)),
+    rejectedTags: rejected.flatMap((item) => item.project.tags),
+  };
+}
+
+const projectMatchInclude = {
+  owner: {
+    select: {
+      id: true,
+      name: true,
+      image: true,
+      githubUsername: true,
+    },
+  },
+  issues: {
+    select: { labels: true },
+  },
+  _count: {
+    select: {
+      issues: true,
+      interests: true,
+      participations: true,
+    },
+  },
+} as const;
+
 export async function listProjects(filters: ProjectFilters = {}) {
   const language = filters.language?.trim();
   const q = filters.q?.trim();
+  const user = await getOptionalUser();
 
-  return prisma.project.findMany({
+  const projects = await prisma.project.findMany({
     where: {
       AND: [
         language
@@ -131,24 +181,50 @@ export async function listProjects(filters: ProjectFilters = {}) {
           : {},
       ],
     },
-    include: {
-      owner: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
-          githubUsername: true,
-        },
-      },
-      _count: {
-        select: {
-          interests: true,
-          participations: true,
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
+    include: projectMatchInclude,
+    orderBy: [{ starsCount: "desc" }, { createdAt: "desc" }],
   });
+
+  if (!user) {
+    return projects.map((project) => ({
+      ...project,
+      score: undefined as number | undefined,
+      issueLabels: collectIssueLabels(project.issues),
+    }));
+  }
+
+  const history = await loadUserMatchHistory(user.id);
+
+  return projects
+    .map((project) => {
+      const issueLabels = collectIssueLabels(project.issues);
+      const breakdown = scoreProjectForUser(
+        {
+          languages: user.languages,
+          interestTags: user.interestTags,
+          experienceLevel: user.experienceLevel,
+        },
+        {
+          ...project,
+          issueLabels,
+        },
+        history,
+        project.id
+      );
+
+      return {
+        ...project,
+        issueLabels,
+        score: breakdown.score,
+        breakdown,
+      };
+    })
+    .sort(
+      (a, b) =>
+        (b.score ?? 0) - (a.score ?? 0) ||
+        (b.starsCount ?? 0) - (a.starsCount ?? 0) ||
+        b.createdAt.getTime() - a.createdAt.getTime()
+    );
 }
 
 export async function getProject(id: string) {
@@ -224,55 +300,31 @@ export async function listRecommendedProjects() {
       where: {
         ownerId: { not: user.id },
       },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            githubUsername: true,
-          },
-        },
-        _count: {
-          select: {
-            issues: true,
-            interests: true,
-          },
-        },
-      },
+      include: projectMatchInclude,
     }),
-    prisma.matchInterest.findMany({
-      where: { userId: user.id },
-      include: {
-        project: {
-          select: { id: true, tags: true },
-        },
-      },
-    }),
+    loadUserMatchHistory(user.id),
   ]);
-
-  const likedTags = history
-    .filter((item) => item.status === "pending" || item.status === "accepted")
-    .flatMap((item) => item.project.tags);
-  const rejectedProjectIds = new Set(
-    history.filter((item) => item.status === "rejected").map((item) => item.projectId)
-  );
 
   return projects
     .map((project) => {
+      const issueLabels = collectIssueLabels(project.issues);
       const breakdown = scoreProjectForUser(
         {
           languages: user.languages,
           interestTags: user.interestTags,
           experienceLevel: user.experienceLevel,
         },
-        project,
-        { likedTags, rejectedProjectIds },
+        {
+          ...project,
+          issueLabels,
+        },
+        history,
         project.id
       );
 
       return {
         ...project,
+        issueLabels,
         score: breakdown.score,
         breakdown,
       };
@@ -459,55 +511,34 @@ export async function getSwipeDeck() {
       where: {
         ownerId: { not: user.id },
       },
-      include: {
-        owner: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-            githubUsername: true,
-          },
-        },
-        _count: {
-          select: {
-            issues: true,
-            interests: true,
-          },
-        },
-      },
+      include: projectMatchInclude,
     }),
-    prisma.matchInterest.findMany({
-      where: { userId: user.id },
-      include: {
-        project: { select: { id: true, tags: true } },
-      },
-    }),
+    loadUserMatchHistory(user.id),
   ]);
 
   const seenIds = new Set(seen.map((item) => item.projectId));
-  const likedTags = history
-    .filter((item) => item.status === "pending" || item.status === "accepted")
-    .flatMap((item) => item.project.tags);
-  const rejectedProjectIds = new Set(
-    history.filter((item) => item.status === "rejected").map((item) => item.projectId)
-  );
 
   return projects
     .filter((project) => !seenIds.has(project.id))
     .map((project) => {
+      const issueLabels = collectIssueLabels(project.issues);
       const breakdown = scoreProjectForUser(
         {
           languages: user.languages,
           interestTags: user.interestTags,
           experienceLevel: user.experienceLevel,
         },
-        project,
-        { likedTags, rejectedProjectIds },
+        {
+          ...project,
+          issueLabels,
+        },
+        history,
         project.id
       );
 
       return {
         ...project,
+        issueLabels,
         score: breakdown.score,
       };
     })
@@ -814,6 +845,9 @@ export async function getMaintainerDashboard() {
           messages: true,
         },
       },
+      issues: {
+        select: { labels: true },
+      },
       interests: {
         where: { status: "pending" },
         include: {
@@ -833,6 +867,14 @@ export async function getMaintainerDashboard() {
         },
         orderBy: { createdAt: "desc" },
       },
+      invites: {
+        where: { status: "pending" },
+        select: { toUserId: true },
+      },
+      participations: {
+        where: { isActive: true },
+        select: { userId: true },
+      },
     },
     orderBy: { updatedAt: "desc" },
   });
@@ -841,6 +883,11 @@ export async function getMaintainerDashboard() {
     by: ["status"],
     where: { project: { ownerId: user.id } },
     _count: { _all: true },
+  });
+
+  const allEngaged = await prisma.matchInterest.findMany({
+    where: { project: { ownerId: user.id } },
+    select: { userId: true, projectId: true },
   });
 
   const openContributors = await prisma.user.findMany({
@@ -859,25 +906,60 @@ export async function getMaintainerDashboard() {
       bio: true,
       image: true,
     },
-    take: 50,
+    take: 80,
+    orderBy: { updatedAt: "desc" },
   });
 
   const projectViews = projects.map((project) => {
-    const ranked = rankCandidatesForProject(project, openContributors).slice(0, 5);
+    const excludeIds = new Set<string>(
+      allEngaged
+        .filter((row) => row.projectId === project.id)
+        .map((row) => row.userId)
+        .concat(
+          project.invites.map((invite) => invite.toUserId),
+          project.participations.map((part) => part.userId)
+        )
+    );
+    const issueLabels = collectIssueLabels(project.issues);
+    const ranked = rankCandidatesForProject(
+      {
+        languages: project.languages,
+        tags: project.tags,
+        lookingFor: project.lookingFor,
+        starsCount: project.starsCount,
+        issuesSyncedAt: project.issuesSyncedAt,
+        issueLabels,
+        _count: project._count,
+      },
+      openContributors,
+      excludeIds
+    ).slice(0, 5);
+
     return {
       ...project,
+      issueLabels,
       suggestedCandidates: ranked,
       pendingCount: project.interests.length,
     };
   });
 
+  const pending =
+    interestStats.find((s) => s.status === "pending")?._count._all ?? 0;
+  const accepted =
+    interestStats.find((s) => s.status === "accepted")?._count._all ?? 0;
+  const rejected =
+    interestStats.find((s) => s.status === "rejected")?._count._all ?? 0;
+  const decided = accepted + rejected;
+
   const stats = {
     projects: projects.length,
-    pendingInterests: interestStats.find((s) => s.status === "pending")?._count._all ?? 0,
-    acceptedInterests: interestStats.find((s) => s.status === "accepted")?._count._all ?? 0,
-    rejectedInterests: interestStats.find((s) => s.status === "rejected")?._count._all ?? 0,
+    pendingInterests: pending,
+    acceptedInterests: accepted,
+    rejectedInterests: rejected,
+    acceptanceRate: decided > 0 ? Math.round((accepted / decided) * 100) : 0,
     openIssues: projects.reduce((sum, p) => sum + p._count.issues, 0),
     activeParticipants: projects.reduce((sum, p) => sum + p._count.participations, 0),
+    totalStars: projects.reduce((sum, p) => sum + (p.starsCount ?? 0), 0),
   };
 
   return { stats, projects: projectViews };

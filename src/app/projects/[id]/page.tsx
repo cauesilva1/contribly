@@ -60,6 +60,22 @@ export default async function ProjectDetailPage({
         </h1>
         <p className="mt-4 text-lg leading-relaxed text-[#57606a]">{project.description}</p>
 
+        <div className="mt-4 flex flex-wrap gap-2 text-sm text-[#57606a]">
+          {typeof project.starsCount === "number" && (
+            <span className="rounded-md bg-[#fff8c5] px-2 py-1 text-xs text-[#9a6700]">
+              ★ {project.starsCount.toLocaleString("en-US")} stars
+            </span>
+          )}
+          <span className="rounded-md bg-[#f6f8fa] px-2 py-1 text-xs">
+            {project.issues.length} good-first issues
+          </span>
+          <span className="rounded-md bg-[#f6f8fa] px-2 py-1 text-xs">
+            {project.issuesSyncedAt
+              ? `sync ${project.issuesSyncedAt.toLocaleString("pt-BR")}`
+              : "nunca sincronizado"}
+          </span>
+        </div>
+
         <div className="mt-5 flex flex-wrap gap-2">
           {project.languages.map((lang) => (
             <span
@@ -199,7 +215,8 @@ export default async function ProjectDetailPage({
               {openContributors.map((contributor) => (
                 <li
                   key={contributor.id}
-                  className="rounded-lg border border-[#d0d7de] p-3"
+                  id={`invite-${contributor.id}`}
+                  className="rounded-lg border border-[#d0d7de] p-3 scroll-mt-24"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>

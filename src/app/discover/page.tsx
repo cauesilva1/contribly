@@ -20,7 +20,8 @@ export default async function DiscoverPage({
       <div className="mb-4">
         <h1 className="font-display text-3xl text-[#0d1117]">Descobrir projetos</h1>
         <p className="mt-2 text-[#57606a]">
-          Filtre por linguagem ou busque por título, descrição e tags.
+          Filtre por linguagem ou busque por título, descrição e tags. Com perfil
+          preenchido, a lista prioriza o seu match score.
         </p>
       </div>
 
@@ -76,6 +77,10 @@ export default async function DiscoverPage({
               tags={project.tags}
               githubLink={project.githubLink}
               ownerName={project.owner.name}
+              score={project.score}
+              starsCount={project.starsCount}
+              issuesCount={project._count.issues}
+              issuesSyncedAt={project.issuesSyncedAt}
             />
           ))}
         </div>

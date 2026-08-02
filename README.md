@@ -20,10 +20,10 @@ Plataforma open source para conectar **contribuidores** a projetos que precisam 
 - Inbox: interesses, convites e notificações in-app
 
 ### Fase 3
-- Matchmaking mais rico (histórico de swipe, issues, experiência, tags de interesse)
+- Matchmaking mais rico (histórico de swipe, issues/labels, experiência, tags, stars, frescor do sync)
 - Sync em lote de issues + rota cron (`/api/cron/sync-issues`)
-- Painel do mantenedor com analytics e candidatos sugeridos
-- Metadados extras do GitHub (stars, última sync)
+- Painel do mantenedor com analytics (taxa de aceite, stars) e candidatos sugeridos
+- Metadados extras do GitHub (stars, última sync) em cards e detalhe
 
 ## Setup local
 

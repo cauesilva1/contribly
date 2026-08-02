@@ -16,6 +16,8 @@ type SwipeProject = {
   lookingFor: string[];
   githubLink: string;
   score?: number;
+  starsCount?: number | null;
+  _count?: { issues?: number };
   owner: {
     name: string | null;
     githubUsername: string | null;
@@ -128,6 +130,16 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
+              {typeof current.starsCount === "number" && current.starsCount > 0 ? (
+                <span className="rounded-md bg-[#fff8c5] px-2 py-1 text-xs text-[#9a6700]">
+                  ★ {current.starsCount.toLocaleString("en-US")}
+                </span>
+              ) : null}
+              {current._count?.issues ? (
+                <span className="rounded-md bg-[#f6f8fa] px-2 py-1 text-xs text-[#57606a]">
+                  {current._count.issues} issues
+                </span>
+              ) : null}
               {current.languages.map((lang) => (
                 <span
                   key={lang}

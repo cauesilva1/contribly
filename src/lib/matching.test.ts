@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { inferExperienceLevel } from "@/lib/github-profile";
-import { normalizeSkill, scoreProjectForUser } from "@/lib/matching";
+import {
+  collectIssueLabels,
+  normalizeSkill,
+  rankCandidatesForProject,
+  scoreProjectForUser,
+} from "@/lib/matching";
 import { normalizeGithubRepoUrl } from "@/lib/github-url";
 
 describe("normalizeSkill", () => {
@@ -21,6 +26,9 @@ describe("scoreProjectForUser", () => {
         languages: ["TypeScript"],
         tags: ["docs", "cli"],
         lookingFor: ["TypeScript", "docs"],
+        starsCount: 1200,
+        issuesSyncedAt: new Date(),
+        issueLabels: ["good first issue", "typescript"],
         _count: { issues: 3, interests: 1 },
       }
     );
@@ -29,6 +37,9 @@ describe("scoreProjectForUser", () => {
     expect(breakdown.tagOverlap).toBeGreaterThan(0);
     expect(breakdown.lookingForOverlap).toBeGreaterThan(0);
     expect(breakdown.issuesBoost).toBeGreaterThan(0);
+    expect(breakdown.starsBoost).toBeGreaterThan(0);
+    expect(breakdown.labelOverlap).toBeGreaterThan(0);
+    expect(breakdown.freshnessBoost).toBeGreaterThan(0);
     expect(breakdown.score).toBeGreaterThan(20);
   });
 
@@ -52,6 +63,99 @@ describe("scoreProjectForUser", () => {
     );
 
     expect(breakdown.score).toBe(0);
+  });
+
+  it("penaliza tags parecidas com rejeições anteriores", () => {
+    const withPenalty = scoreProjectForUser(
+      {
+        languages: ["TypeScript"],
+        interestTags: ["cli"],
+        experienceLevel: "intermediate",
+      },
+      {
+        languages: ["TypeScript"],
+        tags: ["cli", "docs"],
+        lookingFor: [],
+      },
+      {
+        likedTags: [],
+        rejectedProjectIds: new Set(),
+        rejectedTags: ["cli"],
+      },
+      "p2"
+    );
+
+    const withoutPenalty = scoreProjectForUser(
+      {
+        languages: ["TypeScript"],
+        interestTags: ["cli"],
+        experienceLevel: "intermediate",
+      },
+      {
+        languages: ["TypeScript"],
+        tags: ["cli", "docs"],
+        lookingFor: [],
+      },
+      {
+        likedTags: [],
+        rejectedProjectIds: new Set(),
+        rejectedTags: [],
+      },
+      "p2"
+    );
+
+    expect(withPenalty.rejectPenalty).toBeGreaterThan(0);
+    expect(withPenalty.score).toBeLessThan(withoutPenalty.score);
+  });
+});
+
+describe("rankCandidatesForProject", () => {
+  it("exclui candidatos já engajados e ordena por score", () => {
+    const ranked = rankCandidatesForProject(
+      {
+        languages: ["TypeScript"],
+        tags: ["docs"],
+        lookingFor: ["TypeScript"],
+      },
+      [
+        {
+          id: "a",
+          languages: ["TypeScript"],
+          interestTags: ["docs"],
+          experienceLevel: "beginner",
+          openToInvites: true,
+        },
+        {
+          id: "b",
+          languages: ["Python"],
+          interestTags: [],
+          experienceLevel: "advanced",
+          openToInvites: true,
+        },
+        {
+          id: "c",
+          languages: ["TypeScript"],
+          interestTags: [],
+          experienceLevel: "intermediate",
+          openToInvites: false,
+        },
+      ],
+      new Set(["a"])
+    );
+
+    expect(ranked.map((c) => c.id)).not.toContain("a");
+    expect(ranked.map((c) => c.id)).not.toContain("c");
+  });
+});
+
+describe("collectIssueLabels", () => {
+  it("deduplica labels", () => {
+    expect(
+      collectIssueLabels([
+        { labels: ["good first issue", "docs"] },
+        { labels: ["docs", "help wanted"] },
+      ]).sort()
+    ).toEqual(["docs", "good first issue", "help wanted"].sort());
   });
 });
 

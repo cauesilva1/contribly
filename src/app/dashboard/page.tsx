@@ -47,14 +47,16 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ["Projetos", stats.projects],
-          ["Interesses pendentes", stats.pendingInterests],
+          ["Pendentes", stats.pendingInterests],
           ["Aceitos", stats.acceptedInterests],
+          ["Taxa de aceite", `${stats.acceptanceRate}%`],
           ["Recusados", stats.rejectedInterests],
-          ["Issues abertas sync", stats.openIssues],
-          ["Participantes ativos", stats.activeParticipants],
+          ["Issues sync", stats.openIssues],
+          ["Participantes", stats.activeParticipants],
+          ["Stars totais", stats.totalStars],
         ].map(([label, value]) => (
           <div key={label as string} className="surface-card p-4">
             <p className="text-xs uppercase tracking-[0.15em] text-[#57606a]">
@@ -71,8 +73,11 @@ export default async function DashboardPage() {
             <div>
               <h2 className="font-display text-2xl text-[#0d1117]">{project.title}</h2>
               <p className="mt-1 text-sm text-[#57606a]">
-                {project._count.interests} interesses · {project._count.issues} issues ·{" "}
-                {project._count.participations} participantes
+                {typeof project.starsCount === "number"
+                  ? `★ ${project.starsCount} · `
+                  : null}
+                {project._count.interests} interesses · {project._count.issues}{" "}
+                issues · {project._count.participations} participantes
                 {project.issuesSyncedAt
                   ? ` · sync ${project.issuesSyncedAt.toLocaleString("pt-BR")}`
                   : " · nunca sincronizado"}
@@ -117,6 +122,9 @@ export default async function DashboardPage() {
                         <p className="text-xs text-[#57606a]">
                           {interest.user.experienceLevel} ·{" "}
                           {interest.user.languages.join(", ") || "sem langs"}
+                          {interest.user.interestTags.length
+                            ? ` · #${interest.user.interestTags.slice(0, 3).join(" #")}`
+                            : null}
                         </p>
                       </div>
                       <InterestActions interestId={interest.id} />
@@ -130,7 +138,7 @@ export default async function DashboardPage() {
               <h3 className="font-medium text-[#0d1117]">Candidatos sugeridos</h3>
               {project.suggestedCandidates.length === 0 ? (
                 <p className="mt-2 text-sm text-[#57606a]">
-                  Sem candidatos com overlap suficiente.
+                  Sem candidatos com overlap suficiente (ou todos já engajados).
                 </p>
               ) : (
                 <ul className="mt-3 space-y-2">
@@ -151,8 +159,18 @@ export default async function DashboardPage() {
                         {candidate.experienceLevel} ·{" "}
                         {candidate.languages.join(", ") || "sem langs"}
                       </p>
+                      {candidate.interestTags.length > 0 && (
+                        <p className="mt-1 text-xs text-[#57606a]">
+                          #{candidate.interestTags.slice(0, 4).join(" #")}
+                        </p>
+                      )}
+                      <p className="mt-1 text-[11px] text-[#8c959f]">
+                        langs {candidate.breakdown.languageOverlap} · tags{" "}
+                        {candidate.breakdown.tagOverlap} · looking{" "}
+                        {candidate.breakdown.lookingForOverlap}
+                      </p>
                       <Link
-                        href={`/projects/${project.id}`}
+                        href={`/projects/${project.id}#invite-${candidate.id}`}
                         className="mt-2 inline-block cursor-pointer text-xs text-[#0969da] hover:underline"
                       >
                         Convidar no projeto

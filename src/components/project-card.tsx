@@ -9,7 +9,25 @@ type ProjectCardProps = {
   githubLink: string;
   ownerName?: string | null;
   score?: number;
+  starsCount?: number | null;
+  issuesCount?: number;
+  issuesSyncedAt?: Date | string | null;
 };
+
+function formatStars(count: number) {
+  if (count >= 1000) return `${(count / 1000).toFixed(count >= 10000 ? 0 : 1)}k`;
+  return String(count);
+}
+
+function formatSync(value: Date | string | null | undefined) {
+  if (!value) return null;
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return null;
+  const ageDays = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24);
+  if (ageDays < 1) return "sync hoje";
+  if (ageDays < 7) return `sync há ${Math.floor(ageDays)}d`;
+  return `sync ${date.toLocaleDateString("pt-BR")}`;
+}
 
 export function ProjectCard({
   id,
@@ -20,7 +38,12 @@ export function ProjectCard({
   githubLink,
   ownerName,
   score,
+  starsCount,
+  issuesCount,
+  issuesSyncedAt,
 }: ProjectCardProps) {
+  const syncLabel = formatSync(issuesSyncedAt);
+
   return (
     <article className="surface-card surface-card-interactive flex h-full flex-col p-4">
       <div className="flex items-start justify-between gap-3">
@@ -42,6 +65,21 @@ export function ProjectCard({
         {description}
       </p>
       <div className="mt-3 flex flex-wrap gap-1.5">
+        {typeof starsCount === "number" && starsCount > 0 && (
+          <span className="rounded-md bg-[#fff8c5] px-2 py-0.5 text-xs text-[#9a6700]">
+            ★ {formatStars(starsCount)}
+          </span>
+        )}
+        {typeof issuesCount === "number" && issuesCount > 0 && (
+          <span className="rounded-md bg-[#ddf4ff] px-2 py-0.5 text-xs text-[#0969da]">
+            {issuesCount} issues
+          </span>
+        )}
+        {syncLabel && (
+          <span className="rounded-md bg-[#f6f8fa] px-2 py-0.5 text-xs text-[#57606a]">
+            {syncLabel}
+          </span>
+        )}
         {languages.slice(0, 4).map((lang) => (
           <span
             key={lang}
