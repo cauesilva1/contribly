@@ -58,6 +58,7 @@ model User {
   notifications Notification[]
   participations ProjectParticipation[]
   messages      MatchMessage[]
+  maintainerInvitesCreated MaintainerInvite[] @relation("MaintainerInviteCreator")
 }
 
 model Account {
@@ -117,6 +118,7 @@ model Project {
   participations ProjectParticipation[]
   issues         ProjectIssue[]
   messages       MatchMessage[]
+  maintainerInvites MaintainerInvite[]
 }
 
 model MatchInterest {
@@ -205,4 +207,25 @@ model Notification {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Link mágico para avisar/convidar o mantenedor (com ou sem conta no Contribly).
+model MaintainerInvite {
+  id          String    @id @default(cuid())
+  token       String    @unique
+  projectId   String
+  createdById String
+  interestId  String?
+  emailSentTo String?
+  emailSentAt DateTime?
+  expiresAt   DateTime
+  claimedAt   DateTime?
+  claimedById String?
+  createdAt   DateTime  @default(now())
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy User    @relation("MaintainerInviteCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([createdById])
 }

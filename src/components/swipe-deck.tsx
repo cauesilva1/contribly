@@ -50,21 +50,34 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
   function decide(interested: boolean) {
     if (pending || exit) return;
     const direction = interested ? "right" : "left";
+    const projectId = current.id;
     setDragging(false);
     setDragX(0);
     setExit(direction);
 
     startTransition(async () => {
       try {
-        await Promise.all([
-          expressInterest(current.id, interested),
+        const [result] = await Promise.all([
+          expressInterest(projectId, interested),
           new Promise((resolve) => window.setTimeout(resolve, 420)),
         ]);
         setExit(null);
         setIndex((value) => value + 1);
-        toast.success(
-          interested ? "Interesse enviado ao mantenedor" : "Projeto pulado"
-        );
+        if (interested && result && "notify" in result && result.notify) {
+          toast.success("Interesse enviado", {
+            description: "Abra o projeto para e-mail, issue no GitHub ou link de convite.",
+            action: {
+              label: "Avisar",
+              onClick: () => {
+                window.location.href = `/projects/${projectId}?notify=1`;
+              },
+            },
+          });
+        } else {
+          toast.success(
+            interested ? "Interesse enviado ao mantenedor" : "Projeto pulado"
+          );
+        }
       } catch (error) {
         setExit(null);
         toast.error(

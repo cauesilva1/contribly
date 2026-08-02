@@ -8,6 +8,18 @@ export function normalizeGithubRepoUrl(url: string) {
   return `https://github.com/${owner}/${repo}`;
 }
 
+export function parseGithubOwnerRepo(url: string): {
+  owner: string;
+  repo: string;
+} | null {
+  const match = url.trim().match(/github\.com\/([^/]+)\/([^/#?]+)/i);
+  if (!match) return null;
+  return {
+    owner: match[1],
+    repo: match[2].replace(/\.git$/i, ""),
+  };
+}
+
 export async function findExistingProjectByGithub(options: {
   githubLink?: string;
   githubRepoId?: string | null;

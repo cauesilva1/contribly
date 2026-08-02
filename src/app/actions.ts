@@ -7,7 +7,15 @@ import { fetchGoodFirstIssues, fetchGithubRepoMeta } from "@/lib/github";
 import {
   findExistingProjectByGithub,
   normalizeGithubRepoUrl,
+  parseGithubOwnerRepo,
 } from "@/lib/github-url";
+import { userCanAdminGithubRepo } from "@/lib/github";
+import {
+  buildGithubInterestIssueUrl,
+  newInviteToken,
+} from "@/lib/notify-maintainer";
+import { getGithubAccessTokenForUser } from "@/lib/github-sync";
+import { getSiteUrl } from "@/lib/site-url";
 import {
   collectIssueLabels,
   normalizeSkill,
@@ -576,7 +584,10 @@ export async function getSwipeDeck() {
 
 export async function expressInterest(projectId: string, interested: boolean) {
   const user = await requireUser();
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: { owner: true },
+  });
   if (!project) throw new Error("Projeto não encontrado.");
   if (project.ownerId === user.id) {
     throw new Error("Você não pode dar interesse no próprio projeto.");
@@ -597,10 +608,10 @@ export async function expressInterest(projectId: string, interested: boolean) {
       },
     });
     revalidatePath("/swipe");
-    return;
+    return { interested: false as const };
   }
 
-  await prisma.matchInterest.upsert({
+  const interest = await prisma.matchInterest.upsert({
     where: {
       userId_projectId: { userId: user.id, projectId },
     },
@@ -623,10 +634,210 @@ export async function expressInterest(projectId: string, interested: boolean) {
     },
   });
 
+  const notify = await ensureMaintainerNotifyChannels({
+    project,
+    contributor: user,
+    interestId: interest.id,
+  });
+
   revalidatePath("/swipe");
   revalidatePath("/inbox");
   revalidatePath("/dashboard");
   revalidatePath(`/projects/${projectId}`);
+
+  return { interested: true as const, notify };
+}
+
+async function ensureMaintainerNotifyChannels(input: {
+  project: {
+    id: string;
+    title: string;
+    githubLink: string;
+    ownerId: string;
+    owner: { email: string | null; githubUsername: string | null; name: string | null };
+  };
+  contributor: {
+    id: string;
+    name: string | null;
+    githubUsername: string | null;
+  };
+  interestId: string;
+}) {
+  const site = getSiteUrl();
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14);
+  const dayAgo = new Date(Date.now() - 1000 * 60 * 60 * 24);
+
+  const invitesToday = await prisma.maintainerInvite.count({
+    where: {
+      createdById: input.contributor.id,
+      createdAt: { gte: dayAgo },
+    },
+  });
+
+  let invite = await prisma.maintainerInvite.findFirst({
+    where: {
+      projectId: input.project.id,
+      createdById: input.contributor.id,
+      claimedAt: null,
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (!invite) {
+    if (invitesToday >= 20) {
+      throw new Error(
+        "Limite diário de convites atingido. Tente de novo amanhã ou use a issue no GitHub."
+      );
+    }
+    invite = await prisma.maintainerInvite.create({
+      data: {
+        token: newInviteToken(),
+        projectId: input.project.id,
+        createdById: input.contributor.id,
+        interestId: input.interestId,
+        expiresAt,
+      },
+    });
+  } else if (!invite.interestId) {
+    invite = await prisma.maintainerInvite.update({
+      where: { id: invite.id },
+      data: { interestId: input.interestId },
+    });
+  }
+
+  const inviteUrl = `${site}/invite/${invite.token}`;
+
+  const githubIssueUrl = buildGithubInterestIssueUrl({
+    githubLink: input.project.githubLink,
+    projectTitle: input.project.title,
+    contributorName: input.contributor.name ?? "Alguém",
+    contributorGithub: input.contributor.githubUsername,
+    inviteUrl,
+    siteUrl: site,
+  });
+
+  // E-mail transacional desligado por enquanto (requer domínio verificado).
+  // Mantemos só issue GitHub + link mágico.
+  return {
+    inviteUrl,
+    githubIssueUrl,
+    email: { status: "deferred" as const },
+  };
+}
+
+export async function getMaintainerNotifyOptions(projectId: string) {
+  const user = await requireUser();
+  const interest = await prisma.matchInterest.findUnique({
+    where: {
+      userId_projectId: { userId: user.id, projectId },
+    },
+  });
+  if (!interest || interest.status !== "pending") {
+    return null;
+  }
+
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: { owner: true },
+  });
+  if (!project) return null;
+
+  return ensureMaintainerNotifyChannels({
+    project,
+    contributor: user,
+    interestId: interest.id,
+  });
+}
+
+export async function claimMaintainerInvite(token: string) {
+  const user = await requireUser();
+  const invite = await prisma.maintainerInvite.findUnique({
+    where: { token },
+    include: {
+      project: true,
+      createdBy: {
+        select: { id: true, name: true, githubUsername: true },
+      },
+    },
+  });
+
+  if (!invite) throw new Error("Convite inválido.");
+  if (invite.expiresAt.getTime() < Date.now()) {
+    throw new Error("Este convite expirou.");
+  }
+  if (invite.claimedAt) {
+    throw new Error("Este convite já foi utilizado.");
+  }
+
+  const isListedOwner = invite.project.ownerId === user.id;
+  let canTakeOwnership = isListedOwner;
+
+  if (!canTakeOwnership) {
+    const accessToken = await getGithubAccessTokenForUser(user.id).catch(
+      () => null
+    );
+    if (accessToken) {
+      canTakeOwnership = await userCanAdminGithubRepo(
+        invite.project.githubLink,
+        accessToken
+      );
+    } else {
+      const parsed = parseGithubOwnerRepo(invite.project.githubLink);
+      const githubOwner = parsed?.owner.toLowerCase() ?? null;
+      const username = user.githubUsername?.toLowerCase() ?? null;
+      canTakeOwnership = Boolean(
+        githubOwner && username && githubOwner === username
+      );
+    }
+  }
+
+  if (!canTakeOwnership) {
+    const parsed = parseGithubOwnerRepo(invite.project.githubLink);
+    throw new Error(
+      parsed
+        ? `Entre com uma conta GitHub com permissão de admin/maintain em ${parsed.owner}/${parsed.repo}, ou com a conta que publicou o projeto no Contribly.`
+        : "Sua conta não tem permissão para reivindicar este projeto."
+    );
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const claimed = await tx.maintainerInvite.updateMany({
+      where: {
+        id: invite.id,
+        claimedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      data: {
+        claimedAt: new Date(),
+        claimedById: user.id,
+      },
+    });
+
+    if (claimed.count === 0) {
+      throw new Error("Este convite já foi utilizado ou expirou.");
+    }
+
+    if (!isListedOwner) {
+      await tx.project.update({
+        where: { id: invite.projectId },
+        data: { ownerId: user.id },
+      });
+    }
+
+    await tx.notification.create({
+      data: {
+        userId: user.id,
+        title: "Interesse aguardando você",
+        body: `${invite.createdBy.name ?? "Alguém"} quer contribuir com ${invite.project.title}.`,
+        href: "/dashboard",
+      },
+    });
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/projects/${invite.projectId}`);
+  redirect("/dashboard");
 }
 
 export async function respondInterest(

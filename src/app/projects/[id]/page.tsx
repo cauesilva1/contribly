@@ -1,22 +1,27 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  getMaintainerNotifyOptions,
   getProject,
   markNotificationsByHref,
   sendInvite,
   syncProjectIssues,
 } from "@/app/actions";
 import { InterestActions } from "@/components/inbox-actions";
+import { NotifyMaintainerPanel } from "@/components/notify-maintainer-panel";
 import { getOptionalUser } from "@/lib/session";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 
 export default async function ProjectDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ notify?: string }>;
 }) {
   const { id } = await params;
+  void searchParams;
   const project = await getProject(id);
   if (!project) notFound();
 
@@ -25,6 +30,16 @@ export default async function ProjectDetailPage({
     await markNotificationsByHref(`/projects/${id}`);
   }
   const isOwner = user?.id === project.ownerId;
+  const myPendingInterest =
+    !!user &&
+    project.interests.some(
+      (interest) =>
+        interest.userId === user.id && interest.status === "pending"
+    );
+  const notifyOptions =
+    user && myPendingInterest
+      ? await getMaintainerNotifyOptions(id).catch(() => null)
+      : null;
   const isParticipant =
     !!user &&
     (isOwner ||
@@ -124,6 +139,8 @@ export default async function ProjectDetailPage({
           Mantenedor: {project.owner.name ?? project.owner.githubUsername ?? "Anônimo"}
         </p>
       </article>
+
+      {notifyOptions ? <NotifyMaintainerPanel options={notifyOptions} /> : null}
 
       <section className="mt-8 rounded-xl border border-[#d0d7de] bg-white p-6">
         <div className="flex flex-wrap items-end justify-between gap-3">

@@ -132,6 +132,35 @@ export async function fetchGithubRepoMeta(githubLink: string) {
   };
 }
 
+/** Confirma se o token do usuário tem admin/maintain no repo (claim de ownership). */
+export async function userCanAdminGithubRepo(
+  githubLink: string,
+  accessToken: string
+) {
+  const parsed = parseGithubRepo(githubLink);
+  if (!parsed) return false;
+
+  const response = await fetchGithubWithRetry(
+    `https://api.github.com/repos/${parsed.owner}/${parsed.repo}`,
+    {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "User-Agent": "contribly",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      next: { revalidate: 0 },
+    }
+  );
+
+  if (!response.ok) return false;
+
+  const data = (await response.json()) as {
+    permissions?: { admin?: boolean; maintain?: boolean };
+  };
+
+  return Boolean(data.permissions?.admin || data.permissions?.maintain);
+}
+
 function normalizeGithubUrl(
   htmlUrl: string | undefined,
   parsed: { owner: string; repo: string }
