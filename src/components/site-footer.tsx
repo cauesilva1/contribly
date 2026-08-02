@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/brand-mark";
 import { GithubIcon } from "@/components/github-icon";
 
-const REPO = "https://github.com/cauesilva1/openmatch";
+const REPO = "https://github.com/cauesilva1/contribly";
 
 const productLinks = [
   { href: "/discover", label: "Descobrir" },
@@ -84,7 +84,7 @@ export function SiteFooter() {
               className="mt-5 inline-flex items-center gap-2 text-sm text-[#8b949e] transition-colors hover:text-[#e6edf3]"
             >
               <GithubIcon className="h-4 w-4" />
-              cauesilva1/openmatch
+              cauesilva1/contribly
             </a>
           </div>
 

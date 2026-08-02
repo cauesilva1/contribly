@@ -92,7 +92,7 @@ export default function PrivacyPage() {
         <p className="mt-10 text-sm text-[#57606a]">
           Dúvidas ou pedidos sobre dados: abra uma issue no{" "}
           <a
-            href="https://github.com/cauesilva1/openmatch/issues"
+            href="https://github.com/cauesilva1/contribly/issues"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[#0969da] hover:underline"

@@ -23,7 +23,7 @@
 **Contribly** é uma plataforma web para descobrir repositórios open source, demonstrar interesse (swipe), e combinar o próximo passo com mantenedores — aceite, convite e conversa na thread do match.
 
 > App em produção: [https://contribly.vercel.app](https://contribly.vercel.app)  
-> Repo GitHub (nome legado): [cauesilva1/openmatch](https://github.com/cauesilva1/openmatch)
+> Repo: [cauesilva1/contribly](https://github.com/cauesilva1/contribly)
 
 ---
 
@@ -120,8 +120,8 @@ Capturas em desktop 1440×900 @2x (Chrome).
 ### 1. Clone e instale
 
 ```bash
-git clone https://github.com/cauesilva1/openmatch.git
-cd openmatch
+git clone https://github.com/cauesilva1/contribly.git
+cd contribly
 npm install
 ```
 

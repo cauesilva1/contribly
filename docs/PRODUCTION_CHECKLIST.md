@@ -22,19 +22,21 @@ Use esta lista quando for publicar / validar na Vercel.
 
 ## Banco
 
-- [ ] Rodar migrations em prod: `npx prisma migrate deploy` (com `DIRECT_URL`)
-- [ ] (Opcional) `npm run db:seed` só se quiser dados demo
+- [x] Rodar migrations em prod: `npx prisma migrate deploy` (com `DIRECT_URL`) — sem pendências (ago/2026)
+- [ ] (Opcional) `npm run db:seed` só se quiser dados demo extras
 
 ## Pós-deploy
 
-- [ ] Login com GitHub funciona em `https://contribly.vercel.app`
-- [ ] Sync de perfil preenche linguagens
-- [ ] Publicar/importar projeto (stars + issues sync)
-- [ ] Swipe / Pra você / Inbox / Painel
-- [ ] Cron diário (Vercel Cron + `CRON_SECRET`)
+- [x] Login com GitHub funciona em `https://contribly.vercel.app` (validado pelo mantenedor)
+- [x] Sync de perfil / fluxo swipe → aceite → inbox (validado pelo mantenedor)
+- [x] Publicar/importar projeto (stars + issues sync)
+- [x] Cron diário em `vercel.json`: `0 12 * * *` → `/api/cron/sync-issues`
+- [x] Repo GitHub renomeado para [cauesilva1/contribly](https://github.com/cauesilva1/contribly)
+- [x] Nome demo “OpenMatch Maintainer” → “Contribly Maintainer”
 
 ## Observações
 
 - Não commitar `.env`
 - Build na Vercel pula ESLint/typecheck (CI cobre isso) para ficar mais rápido
 - Em caso de token GitHub expirado: sync tenta refresh; se falhar, usa API pública e/ou peça re-login
+- Homepage do repo no GitHub ainda pode apontar para URL antiga da Vercel — atualize para `https://contribly.vercel.app`
