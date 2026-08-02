@@ -155,6 +155,6 @@ export async function resendVerificationEmail(formData: FormData) {
     });
 
     if (error) throw new ActionError(error.message);
-    return { ok: true as const };
+    redirect(`/auth/verify?email=${encodeURIComponent(email)}&resent=1`);
   });
 }

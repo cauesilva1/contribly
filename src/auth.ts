@@ -28,12 +28,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async session({ session, user }) {
       if (session.user) {
+        const dbUser = user as typeof user & {
+          role?: import("@prisma/client").ContributorRole;
+        };
         session.user.id = user.id;
         session.user.name = user.name;
         session.user.email = user.email;
         session.user.image = user.image;
         session.user.githubUsername = user.githubUsername ?? null;
-        session.user.role = user.role ?? "developer";
+        session.user.role = dbUser.role ?? "developer";
       }
       return session;
     },
