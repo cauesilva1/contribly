@@ -55,17 +55,22 @@ export async function SiteHeader() {
                 githubUsername={session.user.githubUsername ?? null}
               />
             ) : (
-              <form
-                action={async () => {
-                  "use server";
-                  await signIn("github", { redirectTo: "/onboarding" });
-                }}
-              >
-                <Button type="submit" variant="primary" size="sm">
-                  <GithubIcon className="h-4 w-4" />
-                  Entrar com GitHub
+              <div className="flex items-center gap-2">
+                <Button asChild variant="outline" size="sm">
+                  <Link href="/auth/login">E-mail</Link>
                 </Button>
-              </form>
+                <form
+                  action={async () => {
+                    "use server";
+                    await signIn("github", { redirectTo: "/onboarding" });
+                  }}
+                >
+                  <Button type="submit" variant="primary" size="sm">
+                    <GithubIcon className="h-4 w-4" />
+                    Entrar com GitHub
+                  </Button>
+                </form>
+              </div>
             )}
           </div>
         </div>

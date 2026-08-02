@@ -33,6 +33,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.email = user.email;
         session.user.image = user.image;
         session.user.githubUsername = user.githubUsername ?? null;
+        session.user.role = user.role ?? "developer";
       }
       return session;
     },
