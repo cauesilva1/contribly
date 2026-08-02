@@ -26,7 +26,7 @@ export default async function ProjectDetailPage({
   void searchParams;
 
   const t = await getTranslations("projects");
-  const dateLocale = locale === "pt" ? "pt-BR" : "en-US";
+  const dateLocale = "en-US"; // locale === "pt" ? "pt-BR" : "en-US";
 
   const project = await getProject(id);
   if (!project) notFound();

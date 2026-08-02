@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { BrandMark } from "@/components/brand-mark";
-import { LocaleSwitcher } from "@/components/locale-switcher";
+// import { LocaleSwitcher } from "@/components/locale-switcher"; // re-enable with PT locale
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
 
@@ -59,7 +59,7 @@ export function SiteHeaderClient({
           </nav>
 
           <div className="flex items-center gap-2">
-            <LocaleSwitcher />
+            {/* <LocaleSwitcher /> */}
             {user ? (
               <UserMenu
                 name={user.name}

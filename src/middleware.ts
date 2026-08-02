@@ -26,7 +26,9 @@ function hasSessionCookie(req: NextRequest) {
 }
 
 function stripLocale(pathname: string) {
-  for (const locale of routing.locales) {
+  // Active locales + legacy prefixes we still strip for auth checks / redirects
+  const prefixes = [...routing.locales, "pt", "en"];
+  for (const locale of prefixes) {
     if (pathname === `/${locale}`) return "/";
     if (pathname.startsWith(`/${locale}/`)) {
       return pathname.slice(locale.length + 1) || "/";
@@ -35,17 +37,16 @@ function stripLocale(pathname: string) {
   return pathname;
 }
 
-function localeFromPath(pathname: string) {
-  for (const locale of routing.locales) {
-    if (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)) {
-      return locale;
-    }
-  }
-  return routing.defaultLocale;
-}
-
 export default function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
+
+  // Legacy PT routes → English (unprefixed)
+  if (pathname === "/pt" || pathname.startsWith("/pt/")) {
+    const url = req.nextUrl.clone();
+    url.pathname = pathname.replace(/^\/pt/, "") || "/";
+    return NextResponse.redirect(url);
+  }
+
   const pathWithoutLocale = stripLocale(pathname);
   const isProtected = protectedPrefixes.some(
     (prefix) =>
@@ -54,10 +55,8 @@ export default function middleware(req: NextRequest) {
   );
 
   if (isProtected && !hasSessionCookie(req)) {
-    const locale = localeFromPath(pathname);
     const url = req.nextUrl.clone();
-    url.pathname =
-      locale === routing.defaultLocale ? "/auth" : `/${locale}/auth`;
+    url.pathname = "/auth";
     url.searchParams.set("auth", "required");
     return NextResponse.redirect(url);
   }
@@ -66,5 +65,6 @@ export default function middleware(req: NextRequest) {
 }
 
 export const config = {
+  // "pt" kept in matcher only to catch legacy URLs and redirect
   matcher: ["/", "/(pt|en)/:path*", "/((?!api|_next|_vercel|.*\\..*).*)"],
 };

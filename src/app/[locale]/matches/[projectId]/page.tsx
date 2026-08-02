@@ -12,7 +12,7 @@ export default async function MatchThreadPage({
   setRequestLocale(locale);
 
   const t = await getTranslations("matches");
-  const dateLocale = locale === "pt" ? "pt-BR" : "en-US";
+  const dateLocale = "en-US"; // locale === "pt" ? "pt-BR" : "en-US";
 
   const { project, messages, currentUserId } = await getMatchThread(projectId);
   await markNotificationsByHref(`/matches/${projectId}`);

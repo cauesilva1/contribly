@@ -38,7 +38,8 @@ export async function generateMetadata({
   return {
     description: t("description"),
     openGraph: {
-      locale: locale === "pt" ? "pt_BR" : "en_US",
+      locale: "en_US",
+      // locale: locale === "pt" ? "pt_BR" : "en_US",
       description: t("description"),
     },
   };
@@ -54,7 +55,8 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale === "pt" ? "pt-BR" : "en"}>
+    <html lang="en">
+      {/* <html lang={locale === "pt" ? "pt-BR" : "en"}> */}
       <body className={`${display.variable} ${sans.variable} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <div className="min-h-screen">

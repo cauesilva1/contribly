@@ -1,7 +1,12 @@
 "use client";
 
+/**
+ * Unused while the app is English-only.
+ * Re-enable with PT in src/i18n/routing.ts + site-header-client.tsx.
+ */
+import { useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
 import { routing, type AppLocale } from "@/i18n/routing";
 
 export function LocaleSwitcher() {
@@ -10,10 +15,14 @@ export function LocaleSwitcher() {
   const pathname = usePathname();
   const router = useRouter();
 
-  function switchTo(next: AppLocale) {
-    if (next === locale) return;
-    router.replace(pathname, { locale: next });
-  }
+  // Aquece o outro idioma assim que o header monta
+  useEffect(() => {
+    for (const code of routing.locales) {
+      if (code !== locale) {
+        router.prefetch(pathname, { locale: code });
+      }
+    }
+  }, [locale, pathname, router]);
 
   return (
     <div
@@ -21,20 +30,25 @@ export function LocaleSwitcher() {
       role="group"
       aria-label={t("label")}
     >
-      {routing.locales.map((code) => (
-        <button
-          key={code}
-          type="button"
-          onClick={() => switchTo(code)}
-          className={`rounded px-2 py-1 transition-colors ${
-            code === locale
-              ? "bg-[#24292f] font-medium text-white"
-              : "text-[#57606a] hover:text-[#0d1117]"
-          }`}
-        >
-          {t(code)}
-        </button>
-      ))}
+      {routing.locales.map((code) => {
+        const active = code === locale;
+        return (
+          <Link
+            key={code}
+            href={pathname}
+            locale={code}
+            prefetch
+            className={`rounded px-2 py-1 transition-colors ${
+              active
+                ? "bg-[#24292f] font-medium text-white"
+                : "text-[#57606a] hover:text-[#0d1117]"
+            }`}
+            aria-current={active ? "true" : undefined}
+          >
+            {t(code)}
+          </Link>
+        );
+      })}
     </div>
   );
 }

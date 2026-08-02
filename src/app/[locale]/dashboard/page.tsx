@@ -21,7 +21,7 @@ export default async function DashboardPage({ params }: Props) {
   const { stats, projects } = await getMaintainerDashboard();
   await markNotificationsByHref("/dashboard");
 
-  const dateLocale = locale === "pt" ? "pt-BR" : "en-US";
+  const dateLocale = "en-US"; // locale === "pt" ? "pt-BR" : "en-US";
 
   if (projects.length === 0) {
     return (
