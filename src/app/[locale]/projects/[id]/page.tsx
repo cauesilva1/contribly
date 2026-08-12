@@ -142,7 +142,7 @@ export default async function ProjectDetailPage({
               href={`/matches/${project.id}`}
               className="cursor-pointer rounded-md border border-[#1f6feb] px-4 py-2 text-sm text-[#0969da] transition-colors hover:bg-[#ddf4ff]"
             >
-              {t("openMatchThread")}
+              {t("openThread")}
             </Link>
           )}
         </div>

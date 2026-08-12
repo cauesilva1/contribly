@@ -44,7 +44,7 @@ Faça **antes** de confiar no ambiente de novo:
 - [x] Publicar/importar projeto (stars + issues sync)
 - [x] Cron diário em `vercel.json`: `0 12 * * *` → `/api/cron/sync-issues`
 - [x] Repo GitHub renomeado para [cauesilva1/contribly](https://github.com/cauesilva1/contribly)
-- [x] Nome demo “OpenMatch Maintainer” → “Contribly Maintainer”
+- [x] Conta demo do mantenedor: “Contribly Maintainer”
 - [x] English-only UI live (`lang=en`, `/pt` → `/`) — smoke ago/2026
 - [ ] Set `ADMIN_EMAIL` or `ADMIN_GITHUB` on Vercel for `/metrics`
 
