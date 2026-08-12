@@ -12,6 +12,7 @@ type ProjectCardProps = {
   score?: number;
   starsCount?: number | null;
   isPrivate?: boolean;
+  catalogUnclaimed?: boolean;
   issuesCount?: number;
   issuesSyncedAt?: Date | string | null;
   showJoinCta?: boolean;
@@ -33,6 +34,7 @@ export async function ProjectCard({
   score,
   starsCount,
   isPrivate = false,
+  catalogUnclaimed = false,
   issuesCount,
   issuesSyncedAt,
   showJoinCta = false,
@@ -50,6 +52,7 @@ export async function ProjectCard({
   }
 
   const syncLabel = formatSync(issuesSyncedAt);
+  const displayOwner = catalogUnclaimed ? null : ownerName;
 
   return (
     <article className="surface-card surface-card-interactive flex h-full flex-col p-4">
@@ -72,6 +75,11 @@ export async function ProjectCard({
         {description}
       </p>
       <div className="mt-3 flex flex-wrap gap-1.5">
+        {catalogUnclaimed ? (
+          <span className="rounded-md bg-[#ddf4ff] px-2 py-0.5 text-xs font-medium text-[#0969da]">
+            {t("catalog")}
+          </span>
+        ) : null}
         {isPrivate ? (
           <span className="rounded-md bg-[#fff8c5] px-2 py-0.5 text-xs font-medium text-[#9a6700]">
             {t("private")}
@@ -109,9 +117,12 @@ export async function ProjectCard({
           </span>
         ))}
       </div>
-      {ownerName && (
-        <p className="mt-2 text-xs text-[#57606a]">{t("by", { name: ownerName })}</p>
+      {displayOwner && (
+        <p className="mt-2 text-xs text-[#57606a]">{t("by", { name: displayOwner })}</p>
       )}
+      {catalogUnclaimed ? (
+        <p className="mt-2 text-xs text-[#57606a]">{t("catalogHint")}</p>
+      ) : null}
       <div className="mt-3 flex flex-wrap gap-2">
         <Link
           href={`/projects/${id}`}

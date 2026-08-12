@@ -263,23 +263,23 @@ async function main() {
   const maintainer = await prisma.user.upsert({
     where: { email: "maintainer@contribly.demo" },
     update: {
-      name: "Contribly Maintainer",
+      name: "Contribly Catalog",
       githubUsername: "contribly-demo",
       languages: ["TypeScript", "Python", "Go", "Rust"],
       interestTags: ["docs", "good-first-issue", "cli", "frontend"],
       experienceLevel: "advanced",
       openToInvites: false,
-      bio: "Conta demo de mantenedor para o Contribly.",
+      bio: "Placeholder catalog owner — real maintainers claim projects on Contribly.",
     },
     create: {
       email: "maintainer@contribly.demo",
-      name: "Contribly Maintainer",
+      name: "Contribly Catalog",
       githubUsername: "contribly-demo",
       languages: ["TypeScript", "Python", "Go", "Rust"],
       interestTags: ["docs", "good-first-issue", "cli", "frontend"],
       experienceLevel: "advanced",
       openToInvites: false,
-      bio: "Conta demo de mantenedor para o Contribly.",
+      bio: "Placeholder catalog owner — real maintainers claim projects on Contribly.",
     },
   });
 
@@ -367,6 +367,7 @@ async function main() {
           tags,
           lookingFor,
           source: "github_import",
+          catalogUnclaimed: true,
           ownerId: maintainer.id,
           starsCount: repo.stargazers_count ?? null,
           issuesSyncedAt: new Date(),

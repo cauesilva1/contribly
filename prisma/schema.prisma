@@ -119,6 +119,8 @@ model Project {
   githubLink   String
   githubRepoId String?
   isPrivate    Boolean       @default(false)
+  /// Seed/catalog listing without a real maintainer on Contribly yet
+  catalogUnclaimed Boolean   @default(false)
   source       ProjectSource @default(manual)
   starsCount   Int?
   issuesSyncedAt DateTime?

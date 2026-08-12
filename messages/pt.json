@@ -167,7 +167,14 @@
     "noBio": "Sem bio",
     "optionalMessagePlaceholder": "Mensagem opcional",
     "invite": "Convidar",
-    "participantsTitle": "Participantes"
+    "participantsTitle": "Participantes",
+    "catalogListing": "Catálogo open source",
+    "catalogBanner": "Nenhum mantenedor reivindicou este listing no Contribly ainda. Você pode abrir good-first issues no GitHub, ou fazer claim se for admin do repo.",
+    "catalogMaintainerHint": "Mantenedor no Contribly: não reivindicado — use Claim se tiver admin/maintain no GitHub.",
+    "claimButton": "Reivindicar como mantenedor",
+    "claiming": "Reivindicando…",
+    "claimSuccess": "Você agora é o mantenedor deste projeto no Contribly",
+    "claimFailed": "Não foi possível reivindicar este projeto"
   },
   "invite": {
     "metaTitle": "Convite do mantenedor",
@@ -408,6 +415,7 @@
     "anonymous": "Anônimo",
     "viewDetails": "Ver detalhes",
     "issuesCount": "{count} issues",
+    "catalogBadge": "Catálogo · sem dono",
     "deckEmptyTitle": "Deck vazio",
     "deckEmptyDescription": "Você já viu os projetos disponíveis. Publique um repo ou volte depois para novos matches."
   },
@@ -476,7 +484,9 @@
     "viewDetails": "Ver detalhes",
     "github": "GitHub",
     "wantToJoin": "Quero participar",
-    "private": "Privado"
+    "private": "Privado",
+    "catalog": "Catálogo",
+    "catalogHint": "Sem dono no Contribly — um mantenedor real pode reivindicar."
   },
   "userMenu": {
     "profile": "Perfil",
@@ -491,6 +501,8 @@
     "interestSentDescription": "Abra o projeto para e-mail, issue no GitHub ou link de convite.",
     "interestSentAction": "Avisar",
     "interestSentToMaintainer": "Interesse enviado ao mantenedor",
+    "interestCatalogTitle": "Interesse salvo",
+    "interestCatalogDescription": "Este listing ainda não tem mantenedor no Contribly — abra uma issue no GitHub ou use o link do projeto.",
     "projectSkipped": "Projeto pulado",
     "swipeError": "Não foi possível registrar",
     "interestAccepted": "Interesse aceito",

@@ -7,6 +7,7 @@ import {
   sendInvite,
   syncProjectIssues,
 } from "@/app/actions";
+import { ClaimCatalogButton } from "@/components/claim-catalog-button";
 import { InterestActions } from "@/components/inbox-actions";
 import { NotifyMaintainerPanel } from "@/components/notify-maintainer-panel";
 import { getOptionalUser } from "@/lib/session";
@@ -35,7 +36,13 @@ export default async function ProjectDetailPage({
   if (user) {
     await markNotificationsByHref(`/projects/${id}`);
   }
-  const isOwner = user?.id === project.ownerId;
+  const isCatalog = project.catalogUnclaimed;
+  const isOwner = !!user && user.id === project.ownerId && !isCatalog;
+  const canClaim =
+    !!user &&
+    isCatalog &&
+    Boolean(user.githubId || user.githubUsername) &&
+    user.id !== project.ownerId;
   const myPendingInterest =
     !!user &&
     project.interests.some(
@@ -74,14 +81,22 @@ export default async function ProjectDetailPage({
     <div className="mx-auto max-w-4xl px-4 py-6">
       <article className="surface-card p-5">
         <p className="text-xs uppercase tracking-[0.2em] text-[#57606a]">
-          {project.source === "github_import"
-            ? t("importedFromGithub")
-            : t("manualEntry")}
+          {isCatalog
+            ? t("catalogListing")
+            : project.source === "github_import"
+              ? t("importedFromGithub")
+              : t("manualEntry")}
         </p>
         <h1 className="mt-2 font-display text-3xl text-[#0d1117] md:text-5xl">
           {project.title}
         </h1>
         <p className="mt-4 text-lg leading-relaxed text-[#57606a]">{project.description}</p>
+
+        {isCatalog ? (
+          <p className="mt-3 rounded-md border border-[#ddf4ff] bg-[#ddf4ff]/50 px-3 py-2 text-sm text-[#0969da]">
+            {t("catalogBanner")}
+          </p>
+        ) : null}
 
         <div className="mt-4 flex flex-wrap gap-2 text-sm text-[#57606a]">
           {typeof project.starsCount === "number" && (
@@ -137,6 +152,7 @@ export default async function ProjectDetailPage({
           >
             {t("goToSwipe")}
           </Link>
+          {canClaim ? <ClaimCatalogButton projectId={project.id} /> : null}
           {isParticipant && (
             <Link
               href={`/matches/${project.id}`}
@@ -148,9 +164,14 @@ export default async function ProjectDetailPage({
         </div>
 
         <p className="mt-6 text-sm text-[#57606a]">
-          {t("maintainerLabel", {
-            name: project.owner.name ?? project.owner.githubUsername ?? t("anonymous"),
-          })}
+          {isCatalog
+            ? t("catalogMaintainerHint")
+            : t("maintainerLabel", {
+                name:
+                  project.owner.name ??
+                  project.owner.githubUsername ??
+                  t("anonymous"),
+              })}
         </p>
       </article>
 

@@ -18,6 +18,7 @@ type SwipeProject = {
   githubLink: string;
   score?: number;
   starsCount?: number | null;
+  catalogUnclaimed?: boolean;
   _count?: { issues?: number };
   owner: {
     name: string | null;
@@ -67,7 +68,17 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
         ]);
         setExit(null);
         setIndex((value) => value + 1);
-        if (interested && result && "notify" in result && result.notify) {
+        if (interested && result && "catalogUnclaimed" in result && result.catalogUnclaimed) {
+          toast.success(tToast("interestCatalogTitle"), {
+            description: tToast("interestCatalogDescription"),
+            action: {
+              label: tToast("interestSentAction"),
+              onClick: () => {
+                window.location.href = `/projects/${projectId}?notify=1`;
+              },
+            },
+          });
+        } else if (interested && result && "notify" in result && result.notify) {
           toast.success(tToast("interestSentTitle"), {
             description: tToast("interestSentDescription"),
             action: {
@@ -214,6 +225,11 @@ export function SwipeDeck({ projects }: { projects: SwipeProject[] }) {
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
+              {current.catalogUnclaimed ? (
+                <span className="rounded-md bg-[#ddf4ff] px-2 py-1 text-xs font-medium text-[#0969da]">
+                  {t("catalogBadge")}
+                </span>
+              ) : null}
               {typeof current.starsCount === "number" && current.starsCount > 0 ? (
                 <span className="rounded-md bg-[#fff8c5] px-2 py-1 text-xs text-[#9a6700]">
                   ★ {current.starsCount.toLocaleString("en-US")}

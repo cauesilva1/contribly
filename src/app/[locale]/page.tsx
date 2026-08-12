@@ -125,6 +125,7 @@ export default async function HomePage({ params }: Props) {
                   githubLink={project.githubLink}
                   ownerName={project.owner.name}
                   isPrivate={project.isPrivate}
+                  catalogUnclaimed={project.catalogUnclaimed}
                 />
               ))}
             </div>

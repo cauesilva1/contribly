@@ -425,6 +425,7 @@ export async function createProject(formData: FormData) {
         lookingFor: parsed.lookingFor,
         starsCount,
         source: githubRepoId ? "github_import" : "manual",
+        catalogUnclaimed: false,
         ownerId: user.id,
       },
     });
@@ -697,14 +698,17 @@ export async function expressInterest(projectId: string, interested: boolean) {
     },
   });
 
-  await prisma.notification.create({
-    data: {
-      userId: project.ownerId,
-      title: "Novo interesse no seu projeto",
-      body: `${user.name ?? "Alguém"} demonstrou interesse em ${project.title}.`,
-      href: `/dashboard`,
-    },
-  });
+  // Catalog listings have no real maintainer on Contribly — skip inbox noise to the demo owner
+  if (!project.catalogUnclaimed) {
+    await prisma.notification.create({
+      data: {
+        userId: project.ownerId,
+        title: "Novo interesse no seu projeto",
+        body: `${user.name ?? "Alguém"} demonstrou interesse em ${project.title}.`,
+        href: `/dashboard`,
+      },
+    });
+  }
 
   const notify = await ensureMaintainerNotifyChannels({
     project,
@@ -717,7 +721,82 @@ export async function expressInterest(projectId: string, interested: boolean) {
   revalidatePath("/dashboard");
   revalidatePath(`/projects/${projectId}`);
 
-  return { interested: true as const, notify };
+  return {
+    interested: true as const,
+    notify,
+    catalogUnclaimed: project.catalogUnclaimed,
+  };
+}
+
+/** Real GitHub admin/maintain takes ownership of a catalog (unclaimed) project. */
+export async function claimCatalogProject(projectId: string) {
+  return withActionError(async () => {
+    const user = await requireUser();
+    if (!user.githubId && !user.githubUsername) {
+      throw new ActionError(
+        "Connect GitHub to claim a catalog project (admin/maintain on the repo)."
+      );
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: {
+        id: true,
+        title: true,
+        githubLink: true,
+        catalogUnclaimed: true,
+        ownerId: true,
+      },
+    });
+    if (!project) throw new ActionError("Project not found.");
+    if (!project.catalogUnclaimed) {
+      throw new ActionError("This project already has a maintainer on Contribly.");
+    }
+    if (project.ownerId === user.id) {
+      throw new ActionError("You already own this project.");
+    }
+
+    const accessToken = await getGithubAccessTokenForUser(user.id);
+    if (!accessToken) {
+      throw new ActionError(
+        "Reconnect GitHub (Import from GitHub / sign in again) to verify repo access."
+      );
+    }
+
+    const canAdmin = await userCanAdminGithubRepo(
+      project.githubLink,
+      accessToken
+    );
+    if (!canAdmin) {
+      throw new ActionError(
+        "GitHub says you are not admin/maintain on this repository."
+      );
+    }
+
+    await prisma.project.update({
+      where: { id: project.id },
+      data: {
+        ownerId: user.id,
+        catalogUnclaimed: false,
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: user.id,
+        title: "Project claimed",
+        body: `You are now the maintainer of ${project.title} on Contribly.`,
+        href: `/dashboard`,
+      },
+    });
+
+    revalidatePath("/discover");
+    revalidatePath("/for-you");
+    revalidatePath("/dashboard");
+    revalidatePath(`/projects/${project.id}`);
+    revalidatePath("/swipe");
+    return project.id;
+  });
 }
 
 async function ensureMaintainerNotifyChannels(input: {

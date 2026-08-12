@@ -167,7 +167,14 @@
     "noBio": "No bio",
     "optionalMessagePlaceholder": "Optional message",
     "invite": "Invite",
-    "participantsTitle": "Participants"
+    "participantsTitle": "Participants",
+    "catalogListing": "Open-source catalog",
+    "catalogBanner": "No maintainer has claimed this listing on Contribly yet. You can still open good-first issues on GitHub, or claim it if you admin the repo.",
+    "catalogMaintainerHint": "Maintainer on Contribly: unclaimed — use Claim if you have GitHub admin/maintain access.",
+    "claimButton": "Claim as maintainer",
+    "claiming": "Claiming…",
+    "claimSuccess": "You now own this project on Contribly",
+    "claimFailed": "Could not claim this project"
   },
   "invite": {
     "metaTitle": "Maintainer invite",
@@ -408,6 +415,7 @@
     "anonymous": "Anonymous",
     "viewDetails": "View details",
     "issuesCount": "{count} issues",
+    "catalogBadge": "Catalog · unclaimed",
     "deckEmptyTitle": "Deck empty",
     "deckEmptyDescription": "You've seen all the available projects. Publish a repo or come back later for new matches."
   },
@@ -476,7 +484,9 @@
     "viewDetails": "View details",
     "github": "GitHub",
     "wantToJoin": "I want to join",
-    "private": "Private"
+    "private": "Private",
+    "catalog": "Catalog",
+    "catalogHint": "Unclaimed on Contribly — a real maintainer can claim it."
   },
   "userMenu": {
     "profile": "Profile",
@@ -491,6 +501,8 @@
     "interestSentDescription": "Open the project for email, GitHub issue, or invite link.",
     "interestSentAction": "Notify",
     "interestSentToMaintainer": "Interest sent to the maintainer",
+    "interestCatalogTitle": "Interest saved",
+    "interestCatalogDescription": "This listing is unclaimed — open a GitHub issue or share the invite from the project page.",
     "projectSkipped": "Project skipped",
     "swipeError": "Couldn't register that",
     "interestAccepted": "Interest accepted",
